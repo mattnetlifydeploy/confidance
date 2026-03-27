@@ -456,6 +456,15 @@ function AddChildModal({
     setSaving(true)
 
     const supabase = getSupabase()
+
+    // Ensure profile exists before inserting child
+    await supabase.from('profiles').upsert({
+      id: parentId,
+      email: '',
+      full_name: '',
+      phone: '',
+    }, { onConflict: 'id', ignoreDuplicates: true })
+
     const { data, error: dbError } = await supabase
       .from('children')
       .insert({

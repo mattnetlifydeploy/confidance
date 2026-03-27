@@ -77,12 +77,25 @@ export function BookingForm() {
 
     setAddingChild(true)
     if (supabase && user) {
-      await supabase.from('children').insert({
+      // Ensure profile exists before inserting child
+      await supabase.from('profiles').upsert({
+        id: user.id,
+        email: user.email || '',
+        full_name: profile?.full_name || user.user_metadata?.full_name || '',
+        phone: profile?.phone || user.user_metadata?.phone || '',
+      })
+
+      const { error: childError } = await supabase.from('children').insert({
         parent_id: user.id,
         name: newChildName,
         age: ageNum,
         medical_info: newChildMedical || null,
       })
+      if (childError) {
+        setErrors({ submit: childError.message })
+        setAddingChild(false)
+        return
+      }
       await refreshChildren()
     }
     setNewChildName('')
