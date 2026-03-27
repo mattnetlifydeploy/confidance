@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { AnimatedBubbles } from '@/components/animated-bubbles'
 import { HeroVideo } from '@/components/hero-video'
-import { TERM_LABEL, TERM_START, CURRENT_TERM, CONTACT_EMAIL } from '@/lib/constants'
+import { TERM_LABEL, TERM_START, CURRENT_TERM, CONTACT_EMAIL, VENUE } from '@/lib/constants'
 
 export const metadata: Metadata = {
   title: 'Confidance | Children\'s Dance & Confidence Classes for Ages 2-6',
@@ -304,7 +304,7 @@ export default function Home() {
             Create your free account, add your child, and book a free trial class.
           </p>
           <p className="reveal mt-3 font-heading text-base font-600 text-coral">
-            Summer term starts April 16th in Hammersmith
+            {CURRENT_TERM.name} term starts {CURRENT_TERM.displayStart} in Hammersmith
           </p>
           <div className="reveal mt-10 flex flex-wrap justify-center gap-4">
             <Link href="/register" className="btn-primary group">

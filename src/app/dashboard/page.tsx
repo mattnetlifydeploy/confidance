@@ -151,28 +151,57 @@ export default function DashboardPage() {
           return (
             <div className="reveal mt-10">
               <h2 className="font-heading text-xl font-bold">Active Bookings</h2>
-              <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                {activeBookings.map((booking) => (
-                  <div key={booking.id} className="card-glow rounded-3xl bg-white p-6">
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-coral/15 to-lilac/15">
-                        <svg className="h-6 w-6 text-coral" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
+              <div className="mt-6 space-y-4">
+                {activeBookings.map((booking) => {
+                  const formattedDate = booking.created_at
+                    ? new Date(booking.created_at).toLocaleDateString('en-GB', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })
+                    : 'N/A'
+                  return (
+                    <div key={booking.id} className="card-glow rounded-3xl bg-white p-6">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-coral/15 to-lilac/15">
+                            <svg className="h-6 w-6 text-coral" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                          <div>
+                            <h3 className="font-heading text-base font-bold">{booking.className}</h3>
+                            <p className="text-sm text-warm-gray">{VENUE.name}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-700 text-green-700">Active</span>
+                          <span className="rounded-full bg-cream px-3 py-1 text-xs font-600 text-charcoal-light">
+                            {booking.booking_type === 'term' ? 'Full Term' : booking.booking_type === 'single' ? 'Single Session' : 'Trial'}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <h3 className="font-heading text-base font-bold">{booking.className}</h3>
-                        <p className="text-xs text-warm-gray">
-                          {booking.booking_type === 'term' ? `${CURRENT_TERM.name} Term ${CURRENT_TERM.year}` : booking.booking_type === 'single' ? 'Single Session' : 'Free Trial'}
-                        </p>
+                      <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-border pt-4 text-sm text-warm-gray">
+                        <span>Child: <strong className="text-charcoal">{booking.childName}</strong></span>
+                        <span>Booked: <strong className="text-charcoal">{formattedDate}</strong></span>
+                        <span>Class: <strong className="text-charcoal">{booking.className}</strong></span>
+                        <button
+                          onClick={async () => {
+                            if (!confirm('Are you sure you want to cancel this booking?')) return
+                            const supabase = getSupabase()
+                            await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', booking.id)
+                            setPastBookings((prev) =>
+                              prev.map((b) => b.id === booking.id ? { ...b, status: 'cancelled' } : b),
+                            )
+                          }}
+                          className="ml-auto rounded-full bg-red-50 px-4 py-1.5 text-xs font-600 text-red-600 transition-all hover:bg-red-100"
+                        >
+                          Cancel Booking
+                        </button>
                       </div>
                     </div>
-                    <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4 text-sm">
-                      <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-700 text-green-700">Active</span>
-                      <span className="text-warm-gray">Child: <strong className="text-charcoal">{booking.childName}</strong></span>
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )

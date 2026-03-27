@@ -78,7 +78,7 @@ export function Footer() {
             &copy; {new Date().getFullYear()} Confidance. All rights reserved.
           </p>
           <a
-            href="https://brightloopmedia.com"
+            href="https://brightloopmedia.co.uk"
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs text-white/20 transition-colors hover:text-white/40"

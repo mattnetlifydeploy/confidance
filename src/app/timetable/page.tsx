@@ -33,7 +33,9 @@ export default function TimetablePage() {
             </h1>
             <p className="reveal mt-6 text-lg leading-relaxed text-charcoal-light">
               Classes run after school during term time. Book for the full term
-              or try a single session first. {TERM_LABEL} runs {CURRENT_TERM.startDate} to {CURRENT_TERM.endDate}.
+              or try a single session first. {TERM_LABEL} runs{' '}
+              {new Date(CURRENT_TERM.startDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })} to{' '}
+              {new Date(CURRENT_TERM.endDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.
             </p>
           </div>
         </div>

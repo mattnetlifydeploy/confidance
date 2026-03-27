@@ -46,7 +46,7 @@ export default function ClassesPage() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid gap-8 md:grid-cols-2">
             {/* Baby Boogie Flip Card */}
-            <div className="reveal flip-card h-[520px]" tabIndex={0} role="button" aria-label="Baby Boogie class details - press Enter to flip">
+            <div className="reveal flip-card h-[560px]" tabIndex={0} role="button" aria-label="Baby Boogie class details - press Enter to flip">
               <div className="flip-card-inner">
                 <div className="flip-card-front overflow-hidden rounded-3xl bg-gradient-to-br from-lilac via-lilac-dark to-[#8B7BB5]">
                   {/* Illustrated decorations */}
@@ -63,7 +63,7 @@ export default function ClassesPage() {
                       Ages 2 to 4
                     </span>
                     <h3 className="mt-3 font-heading text-3xl font-bold text-white">Baby Boogie</h3>
-                    <p className="mt-1 text-xs text-white/70">Mondays 3:45 to 4:15</p>
+                    <p className="mt-1 text-xs text-white/70">Thursdays 3:45 to 4:15</p>
                     <p className="mt-2 text-sm text-white/70">Tap to see more</p>
                   </div>
                 </div>
@@ -101,7 +101,7 @@ export default function ClassesPage() {
             </div>
 
             {/* Confidance Flip Card */}
-            <div className="reveal stagger-2 flip-card h-[520px]" tabIndex={0} role="button" aria-label="Confidance Kids class details - press Enter to flip">
+            <div className="reveal stagger-2 flip-card h-[560px]" tabIndex={0} role="button" aria-label="Confidance Kids class details - press Enter to flip">
               <div className="flip-card-inner">
                 <div className="flip-card-front overflow-hidden rounded-3xl bg-gradient-to-br from-coral via-coral-dark to-[#D4614E]">
                   {/* Illustrated decorations */}
@@ -118,7 +118,7 @@ export default function ClassesPage() {
                       Ages 3 to 6
                     </span>
                     <h3 className="mt-3 font-heading text-3xl font-bold text-white">Confidance Kids</h3>
-                    <p className="mt-1 text-xs text-white/70">Mondays 4:20 to 4:50</p>
+                    <p className="mt-1 text-xs text-white/70">Thursdays 4:20 to 4:50</p>
                     <p className="mt-2 text-sm text-white/70">Tap to see more</p>
                   </div>
                 </div>
