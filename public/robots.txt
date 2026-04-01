@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /dashboard
+Disallow: /api/
+Disallow: /booking-success
 
-Sitemap: https://confidance.co.uk/sitemap.xml
+Sitemap: https://confidancecommunity.co.uk/sitemap.xml

@@ -3,17 +3,16 @@ import { stripe } from '@/lib/stripe-server'
 import { createClient } from '@supabase/supabase-js'
 import { PRICING, getRemainingSessionCount, VENUE, getNextTerm, getFullTermSessionCount, getCurrentTerm } from '@/lib/constants'
 
-const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || '',
-)
+const supabaseAdmin = process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+  ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
+  : null
 
 const LOCATION = `${VENUE.name}, ${VENUE.address}`
 
 export async function POST(req: NextRequest) {
-  if (!stripe) {
+  if (!stripe || !supabaseAdmin) {
     return NextResponse.json(
-      { error: 'Stripe is not configured' },
+      { error: 'Server not configured' },
       { status: 500 },
     )
   }

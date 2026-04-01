@@ -13,7 +13,7 @@ export default function Home() {
   return (
     <>
       {/* ═══ HERO ═══ */}
-      <section className="relative flex min-h-[100vh] items-center overflow-hidden bg-cream">
+      <section className="relative flex min-h-[100dvh] items-center overflow-hidden bg-cream">
         {/* Animated bubbles */}
         <AnimatedBubbles count={15} />
 

@@ -216,7 +216,7 @@ export function BookingForm() {
   const nextTermTotal = nextTerm ? getFullTermSessionCount(nextTerm) : 0
 
   const termSessionCount = form.selectedTerm === 'next' && nextTerm ? nextTermTotal : currentTermRemaining
-  const termPrice = termSessionCount * PRICING.term_session_price
+  const termPrice = termSessionCount * PRICING.termPerSession
 
   if (submitted) {
     return (
@@ -317,7 +317,7 @@ export function BookingForm() {
             <div className="mt-3 space-y-3">
               {[
                 { value: 'free-trial' as const, label: 'Free Trial', desc: 'One free class (per child)', price: 'Free' },
-                { value: 'single-session' as const, label: 'Single Session', desc: 'Book one session', price: formatPrice(PRICING.single_session_price) },
+                { value: 'single-session' as const, label: 'Single Session', desc: 'Book one session', price: formatPrice(PRICING.singleSession) },
                 { value: 'term-pass' as const, label: 'Term Pass', desc: 'Remaining sessions at £10 each', price: 'Price varies' },
               ].map((opt) => (
                 <button
@@ -390,11 +390,11 @@ export function BookingForm() {
                       {CURRENT_TERM.name} Term {CURRENT_TERM.year} (Remaining)
                     </span>
                     <p className="mt-1 text-xs text-warm-gray">
-                      {currentTermRemaining} session{currentTermRemaining !== 1 ? 's' : ''} left at {formatPrice(PRICING.term_session_price)} each
+                      {currentTermRemaining} session{currentTermRemaining !== 1 ? 's' : ''} left at {formatPrice(PRICING.termPerSession)} each
                     </p>
                   </div>
                   <span className="font-heading text-sm font-700 text-coral">
-                    {formatPrice(currentTermRemaining * PRICING.term_session_price)}
+                    {formatPrice(currentTermRemaining * PRICING.termPerSession)}
                   </span>
                 </div>
                 {currentTermDates.length > 0 && (
@@ -424,11 +424,11 @@ export function BookingForm() {
                         {nextTerm.name} Term {nextTerm.year} (Full Term)
                       </span>
                       <p className="mt-1 text-xs text-warm-gray">
-                        {nextTermTotal} sessions at {formatPrice(PRICING.term_session_price)} each
+                        {nextTermTotal} sessions at {formatPrice(PRICING.termPerSession)} each
                       </p>
                     </div>
                     <span className="font-heading text-sm font-700 text-coral">
-                      {formatPrice(nextTermTotal * PRICING.term_session_price)}
+                      {formatPrice(nextTermTotal * PRICING.termPerSession)}
                     </span>
                   </div>
                   {nextTermDates.length > 0 && (
@@ -658,7 +658,7 @@ export function BookingForm() {
                   form.bookingType === 'free-trial'
                     ? 'Free'
                     : form.bookingType === 'single-session'
-                      ? formatPrice(PRICING.single_session_price)
+                      ? formatPrice(PRICING.singleSession)
                       : formatPrice(termPrice)
                 }
                 highlight

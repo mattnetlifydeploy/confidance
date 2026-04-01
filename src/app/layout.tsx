@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Quicksand, Inter } from 'next/font/google'
+import { Quicksand, Outfit } from 'next/font/google'
 import './globals.css'
 import { Nav } from '@/components/nav'
 import { Footer } from '@/components/footer'
@@ -14,14 +14,14 @@ const quicksand = Quicksand({
   variable: '--font-quicksand',
 })
 
-const inter = Inter({
+const outfit = Outfit({
   subsets: ['latin'],
   weight: ['400', '500', '600'],
   display: 'swap',
-  variable: '--font-inter',
+  variable: '--font-outfit',
 })
 
-const siteUrl = 'https://confidance.co.uk'
+const siteUrl = 'https://confidancecommunity.co.uk'
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     template: '%s | Confidance',
   },
   description: 'Helping children aged 2 to 6 grow in confidence, creativity, and self expression through dance, singing, and movement. Classes in your local area.',
-  keywords: ['children dance classes', 'kids confidence', 'baby ballet', 'toddler dance', 'Confidance', 'singing classes', 'kids dance', 'preschool dance', 'children confidence building', 'musical movement'],
+  keywords: ['children dance classes Hammersmith', 'kids confidence classes London', 'baby dance classes W6', 'toddler dance Hammersmith', 'Confidance', 'singing classes for toddlers', 'kids dance classes near me', 'preschool dance Hammersmith', 'children confidence building through dance', 'musical movement classes ages 2 to 6'],
   authors: [{ name: 'Jessica Murphy' }],
   creator: 'Bright Loop Media',
   openGraph: {
@@ -66,9 +66,29 @@ const organizationJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'LocalBusiness',
   name: 'Confidance',
-  description: 'Children\'s dance and confidence building classes for ages 2 to 6. Baby Boogie and Confidance classes featuring dance, singing, and movement.',
+  description: 'Children\'s dance and confidence building classes for ages 2 to 6 in Hammersmith, London. Baby Boogie and Confidance Kids classes featuring dance, singing, and movement.',
   url: siteUrl,
   email: 'confidancejessica@gmail.com',
+  telephone: '',
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: '7 Bradmore Park Road',
+    addressLocality: 'Hammersmith',
+    addressRegion: 'London',
+    postalCode: 'W6 0DT',
+    addressCountry: 'GB',
+  },
+  geo: {
+    '@type': 'GeoCoordinates',
+    latitude: 51.4928,
+    longitude: -0.2342,
+  },
+  openingHoursSpecification: {
+    '@type': 'OpeningHoursSpecification',
+    dayOfWeek: 'Thursday',
+    opens: '15:45',
+    closes: '16:50',
+  },
   founder: {
     '@type': 'Person',
     name: 'Jessica Murphy',
@@ -79,11 +99,37 @@ const organizationJsonLd = {
     },
   },
   areaServed: {
-    '@type': 'Country',
-    name: 'United Kingdom',
+    '@type': 'City',
+    name: 'Hammersmith',
+    containedInPlace: {
+      '@type': 'City',
+      name: 'London',
+    },
   },
-  priceRange: '$$',
+  priceRange: '£10-£12 per session',
   serviceType: 'Children\'s Dance Classes',
+  hasOfferCatalog: {
+    '@type': 'OfferCatalog',
+    name: 'Dance Classes',
+    itemListElement: [
+      {
+        '@type': 'Offer',
+        itemOffered: {
+          '@type': 'Service',
+          name: 'Baby Boogie',
+          description: 'Dance, singing and movement class for children aged 2 to 4',
+        },
+      },
+      {
+        '@type': 'Offer',
+        itemOffered: {
+          '@type': 'Service',
+          name: 'Confidance Kids',
+          description: 'Structured dance, singing and confidence class for children aged 3 to 6',
+        },
+      },
+    ],
+  },
   sameAs: [
     'https://instagram.com/confidancecommunity',
   ],
@@ -95,7 +141,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${quicksand.variable} ${inter.variable}`}>
+    <html lang="en" className={`${quicksand.variable} ${outfit.variable}`}>
       <head>
         <script
           type="application/ld+json"

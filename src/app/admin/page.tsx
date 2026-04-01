@@ -3,14 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase'
 import type { Child, Profile, Booking } from '@/lib/database.types'
 import { CLASSES, CURRENT_TERM, getTermSessionDates } from '@/lib/constants'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-)
 
 type BookingWithChild = Booking & {
   childName: string

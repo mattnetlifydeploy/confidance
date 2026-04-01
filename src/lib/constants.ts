@@ -28,9 +28,7 @@ export type ClassType = keyof typeof CLASSES
 
 export const PRICING = {
   singleSession: 1200,   // £12
-  single_session_price: 1200, // alias for booking-form
-  termPerSession: 1000,   // £10 per session
-  term_session_price: 1000,  // alias for booking-form
+  termPerSession: 1000,  // £10 per session
   freeTrial: 0,
 } as const
 

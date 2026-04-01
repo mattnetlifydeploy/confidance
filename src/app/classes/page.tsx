@@ -93,7 +93,7 @@ export default function ClassesPage() {
                       <p className="text-xs text-white/60">Small groups, parents welcome</p>
                     </div>
                   </div>
-                  <Link href="/register" className="btn-glass mt-6 w-full text-center text-sm">
+                  <Link href="/book" className="btn-glass mt-6 w-full text-center text-sm">
                     Book Baby Boogie
                   </Link>
                 </div>
@@ -148,7 +148,7 @@ export default function ClassesPage() {
                       <p className="text-xs text-white/60">Independent, small groups</p>
                     </div>
                   </div>
-                  <Link href="/register" className="btn-glass mt-6 w-full text-center text-sm">
+                  <Link href="/book" className="btn-glass mt-6 w-full text-center text-sm">
                     Book Confidance Kids
                   </Link>
                 </div>
@@ -253,7 +253,7 @@ export default function ClassesPage() {
             Book a trial class and Jessica will help you find the perfect fit for your little one.
           </p>
           <div className="reveal mt-10 flex flex-wrap justify-center gap-4">
-            <Link href="/register" className="btn-primary group">
+            <Link href="/book" className="btn-primary group">
               Book a Trial Class
               <svg className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />

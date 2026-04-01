@@ -77,14 +77,22 @@ export function Footer() {
           <p className="text-xs text-white/30">
             &copy; {new Date().getFullYear()} Confidance. All rights reserved.
           </p>
-          <a
-            href="https://brightloopmedia.co.uk"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-white/20 transition-colors hover:text-white/40"
-          >
-            Site by Bright Loop Media
-          </a>
+          <div className="flex items-center gap-4">
+            <Link href="/privacy" className="text-xs text-white/30 transition-colors hover:text-white/50">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="text-xs text-white/30 transition-colors hover:text-white/50">
+              Terms & Conditions
+            </Link>
+            <a
+              href="https://brightloopmedia.co.uk"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-white/20 transition-colors hover:text-white/40"
+            >
+              Site by Bright Loop Media
+            </a>
+          </div>
           <div className="flex items-center gap-3">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1 text-xs text-white/30">
               <span className="h-1.5 w-1.5 rounded-full bg-green-400" />

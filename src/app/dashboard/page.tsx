@@ -1,19 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { getSupabase } from '@/lib/supabase'
 import { AnimatedBubbles } from '@/components/animated-bubbles'
-import { CLASSES, VENUE, CURRENT_TERM } from '@/lib/constants'
+import { CLASSES, VENUE } from '@/lib/constants'
 import type { Child, Booking } from '@/lib/database.types'
 
 type PastBooking = Booking & { childName: string; className?: string }
 
 export default function DashboardPage() {
   const { user, profile, loading, signOut } = useAuth()
-  const router = useRouter()
   const [showAddChild, setShowAddChild] = useState(false)
 
   const [children, setChildren] = useState<Child[]>([])
@@ -30,7 +29,7 @@ export default function DashboardPage() {
       if (!user) return
       const supabase = getSupabase()
       const { data } = await supabase.from('children').select('*').eq('parent_id', user.id)
-      setChildren(data || [])
+      setChildren((data as Child[]) || [])
       setChildrenLoading(false)
     }
     if (user) fetchChildren()
@@ -53,15 +52,17 @@ export default function DashboardPage() {
         return
       }
 
+      const typedBookings = bookingsData as Booking[]
+
       // Track which children have used their trial
       const trialIds = new Set<string>()
-      bookingsData.forEach((b) => {
+      typedBookings.forEach((b) => {
         if (b.booking_type === 'trial') trialIds.add(b.child_id)
       })
       setTrialChildIds(trialIds)
 
       // Enrich with child names
-      const enriched: PastBooking[] = bookingsData.map((booking) => {
+      const enriched: PastBooking[] = typedBookings.map((booking) => {
         const child = children.find((c) => c.id === booking.child_id)
         const classInfo = CLASSES[booking.class_type as keyof typeof CLASSES]
 
@@ -91,8 +92,7 @@ export default function DashboardPage() {
   }
 
   if (!user) {
-    router.push('/login')
-    return null
+    redirect('/login')
   }
 
   return (
@@ -512,7 +512,7 @@ function AddChildModal({
     }
 
     if (data) {
-      onAdded(data)
+      onAdded(data as Child)
     }
   }
 

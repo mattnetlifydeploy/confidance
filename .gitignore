@@ -3,4 +3,9 @@ node_modules
 .netlify
 .vercel
 .env.local
+.env
+.env.production
+.env*.local
 out/
+.DS_Store
+*.tsbuildinfo

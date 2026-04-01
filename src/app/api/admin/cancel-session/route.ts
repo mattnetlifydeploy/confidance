@@ -1,17 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.SUPABASE_URL
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-if (!supabaseUrl || !supabaseServiceRoleKey) {
-  throw new Error('Missing Supabase environment variables')
+function getSupabaseAdmin() {
+  const url = process.env.SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key) return null
+  return createClient(url, key)
 }
-
-const supabase = createClient(supabaseUrl, supabaseServiceRoleKey)
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = getSupabaseAdmin()
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Server not configured' },
+        { status: 500 },
+      )
+    }
     // Get the Authorization header
     const authHeader = request.headers.get('authorization')
     if (!authHeader) {
