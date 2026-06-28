@@ -6,6 +6,8 @@ import { supabase } from '@/lib/supabase'
 import { formatPrice } from '@/lib/stripe'
 import { CLASSES, VENUE, CURRENT_TERM, PRICING, getTermSessionDates, getRemainingSessionCount, getTermPrice, getNextTerm, getFullTermSessionCount } from '@/lib/constants'
 import { bookingSchema, type BookingFormData } from '@/lib/booking-schema'
+import { renderMarkdown } from '@/lib/markdown'
+import { getSupabase } from '@/lib/supabase'
 
 export function BookingForm() {
   const { user, profile, children, refreshChildren } = useAuth()
@@ -15,6 +17,12 @@ export function BookingForm() {
   const [saving, setSaving] = useState(false)
   const [trialUsed, setTrialUsed] = useState(false)
   const [quote, setQuote] = useState<{ amount: number; discountAmount: number; discountPct: number; sessionCount: number } | null>(null)
+
+  const [waiver, setWaiver] = useState<{ id: string; title: string; body_md: string; published_at: string } | null>(null)
+  const [waiverSigned, setWaiverSigned] = useState(false)
+  const [signatureText, setSignatureText] = useState('')
+  const [signingWaiver, setSigningWaiver] = useState(false)
+
   const [form, setForm] = useState({
     classType: '' as 'baby-boogie' | 'confidance-kids' | '',
     bookingType: '' as 'free-trial' | 'single-session' | 'term-pass' | '',
@@ -39,6 +47,32 @@ export function BookingForm() {
       }))
     }
   }, [profile])
+
+  // Fetch active waiver
+  useEffect(() => {
+    async function fetchActiveWaiver() {
+      if (!user?.id) return
+      try {
+        const supabaseClient = getSupabase()
+        const { data: { session } } = await supabaseClient.auth.getSession()
+        if (!session?.access_token) return
+
+        const res = await fetch('/api/waivers/active', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        })
+
+        if (res.ok) {
+          const data = await res.json()
+          setWaiver(data.waiver)
+          setWaiverSigned(data.signed)
+        }
+      } catch {
+        // Silent fail by design
+      }
+    }
+
+    fetchActiveWaiver()
+  }, [user])
 
   // Fetch live quote for term-pass on step 5
   useEffect(() => {
@@ -708,6 +742,74 @@ export function BookingForm() {
             </dl>
           </div>
 
+          {waiver && !waiverSigned && (
+            <div className="rounded-2xl bg-cream p-8">
+              <h3 className="font-heading text-lg font-bold">Sign Waiver: {waiver.title}</h3>
+              <div
+                className="mt-4 prose prose-sm max-w-none text-charcoal"
+                dangerouslySetInnerHTML={{ __html: renderMarkdown(waiver.body_md) }}
+              />
+              <div className="mt-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium">Full Name (to sign)</label>
+                  <input
+                    type="text"
+                    value={signatureText}
+                    onChange={(e) => setSignatureText(e.target.value)}
+                    placeholder="Enter your full name"
+                    maxLength={120}
+                    className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm"
+                  />
+                </div>
+                <button
+                  onClick={async () => {
+                    if (signatureText.trim().length < 2) {
+                      return
+                    }
+                    setSigningWaiver(true)
+                    try {
+                      const supabaseClient = getSupabase()
+                      const { data: { session } } = await supabaseClient.auth.getSession()
+                      if (!session?.access_token) throw new Error('Not authenticated')
+
+                      const res = await fetch('/api/waivers/sign', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${session.access_token}`,
+                        },
+                        body: JSON.stringify({
+                          waiverId: waiver.id,
+                          signatureText: signatureText,
+                          childId: form.childId || null,
+                        }),
+                      })
+
+                      if (!res.ok) {
+                        const errData = await res.json()
+                        throw new Error(errData.error || 'Failed to sign waiver')
+                      }
+
+                      setWaiverSigned(true)
+                      setSignatureText('')
+                    } catch (err) {
+                      setErrors({
+                        waiver: err instanceof Error ? err.message : 'Failed to sign waiver',
+                      })
+                    } finally {
+                      setSigningWaiver(false)
+                    }
+                  }}
+                  disabled={signingWaiver || signatureText.trim().length < 2}
+                  className="w-full rounded-lg bg-coral px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                >
+                  {signingWaiver ? 'Signing...' : 'Sign Waiver'}
+                </button>
+              </div>
+              {errors.waiver && <p className="mt-2 text-xs text-red-500">{errors.waiver}</p>}
+            </div>
+          )}
+
           <label className="flex items-start gap-3 cursor-pointer">
             <input
               type="checkbox"
@@ -723,11 +825,22 @@ export function BookingForm() {
           </label>
           {errors.agreedToTerms && <p className="text-xs text-red-500">{errors.agreedToTerms}</p>}
 
-          <div className="flex gap-4">
-            <button onClick={() => setStep(4)} className="btn-secondary flex-1">Back</button>
-            <button onClick={handleSubmit} disabled={saving} className="btn-primary flex-1 disabled:opacity-50">
-              {saving ? 'Processing...' : `${form.bookingType === 'free-trial' ? 'Complete' : 'Pay'} & Book`}
-            </button>
+          <div className="space-y-3">
+            {waiver && !waiverSigned && (
+              <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                Please sign the waiver above to continue.
+              </p>
+            )}
+            <div className="flex gap-4">
+              <button onClick={() => setStep(4)} className="btn-secondary flex-1">Back</button>
+              <button
+                onClick={handleSubmit}
+                disabled={saving || (!!waiver && !waiverSigned)}
+                className="btn-primary flex-1 disabled:opacity-50"
+              >
+                {saving ? 'Processing...' : `${form.bookingType === 'free-trial' ? 'Complete' : 'Pay'} & Book`}
+              </button>
+            </div>
           </div>
         </div>
       )}

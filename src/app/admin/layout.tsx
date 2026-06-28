@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { label: 'Families', href: '/admin/families' },
   { label: 'Classes', href: '/admin/classes' },
   { label: 'Terms', href: '/admin/terms' },
+  { label: 'Waivers', href: '/admin/waivers' },
   { label: 'Comms', href: '/admin/comms' },
   { label: 'Reports', href: '/admin/reports' },
 ]

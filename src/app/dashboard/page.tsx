@@ -35,6 +35,16 @@ export default function DashboardPage() {
   const [banners, setBanners] = useState<BannerRow[]>([])
   const [bannersLoading, setBannersLoading] = useState(true)
 
+  type WaiverEntry = {
+    waiver: { id: string; title: string; body_md: string; published_at: string }
+    signed: boolean
+    signedAt: string | null
+  }
+  const [waiverEntries, setWaiverEntries] = useState<WaiverEntry[]>([])
+  const [waiversLoading, setWaiversLoading] = useState(true)
+  const [signingWaiverId, setSigningWaiverId] = useState<string | null>(null)
+  const [waiverSignatureText, setWaiverSignatureText] = useState('')
+
   // Fetch children
   useEffect(() => {
     async function fetchChildren() {
@@ -112,6 +122,31 @@ export default function DashboardPage() {
     }
     if (user) fetchBanners()
   }, [user])
+
+  // Fetch waivers
+  const fetchWaivers = async () => {
+    if (!user) return
+    try {
+      const supabase = getSupabase()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) return
+      const res = await fetch('/api/waivers/mine', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setWaiverEntries(data.entries || [])
+      }
+    } catch {
+      // Silent fail by design
+    } finally {
+      setWaiversLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (user) fetchWaivers()
+  }, [user, fetchWaivers])
 
   if (loading) {
     return (
@@ -223,6 +258,99 @@ export default function DashboardPage() {
             </div>
           )
         })()}
+
+        {/* Waivers */}
+        {!waiversLoading && waiverEntries.length > 0 && (
+          <div className="reveal mt-12">
+            <h2 className="font-heading text-xl font-bold">Waivers</h2>
+            <div className="mt-6 space-y-4">
+              {waiverEntries.map((entry) => {
+                const statusText = entry.signed
+                  ? `Signed on ${new Date(entry.signedAt || '').toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric' })}`
+                  : 'Not signed'
+
+                return (
+                  <div
+                    key={entry.waiver.id}
+                    className="rounded-3xl bg-white p-6 shadow-sm card-glow"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-heading text-base font-bold">{entry.waiver.title}</h3>
+                        <p className={`mt-1 text-sm ${entry.signed ? 'text-green-600' : 'text-warm-gray'}`}>
+                          {statusText}
+                        </p>
+                      </div>
+                      {(!entry.signed || true) && (
+                        <button
+                          onClick={() => {
+                            if (signingWaiverId === entry.waiver.id) {
+                              setSigningWaiverId(null)
+                              setWaiverSignatureText('')
+                            } else {
+                              setSigningWaiverId(entry.waiver.id)
+                              setWaiverSignatureText('')
+                            }
+                          }}
+                          className="shrink-0 font-heading text-sm font-600 text-coral transition-colors hover:text-coral-dark"
+                        >
+                          {entry.signed ? 'Re-sign' : 'Sign'}
+                        </button>
+                      )}
+                    </div>
+
+                    {signingWaiverId === entry.waiver.id && (
+                      <div className="mt-4 space-y-3 border-t border-gray-200 pt-4">
+                        <input
+                          type="text"
+                          value={waiverSignatureText}
+                          onChange={(e) => setWaiverSignatureText(e.target.value)}
+                          placeholder="Enter your full name to sign"
+                          maxLength={120}
+                          className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm"
+                        />
+                        <button
+                          onClick={async () => {
+                            if (waiverSignatureText.trim().length < 2) return
+                            try {
+                              const supabase = getSupabase()
+                              const { data: { session } } = await supabase.auth.getSession()
+                              if (!session?.access_token) throw new Error('Not authenticated')
+
+                              const res = await fetch('/api/waivers/sign', {
+                                method: 'POST',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                  'Authorization': `Bearer ${session.access_token}`,
+                                },
+                                body: JSON.stringify({
+                                  waiverId: entry.waiver.id,
+                                  signatureText: waiverSignatureText,
+                                }),
+                              })
+
+                              if (!res.ok) throw new Error('Failed to sign waiver')
+
+                              setSigningWaiverId(null)
+                              setWaiverSignatureText('')
+                              await fetchWaivers()
+                            } catch {
+                              // Silent fail - user can retry
+                            }
+                          }}
+                          disabled={waiverSignatureText.trim().length < 2}
+                          className="w-full rounded-lg bg-coral px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
+                        >
+                          Confirm Signature
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Children */}
         <div className="reveal mt-12">

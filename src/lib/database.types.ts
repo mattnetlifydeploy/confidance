@@ -345,6 +345,90 @@ export type Database = {
           },
         ]
       }
+      waivers: {
+        Row: {
+          id: string
+          title: string
+          body_md: string
+          published_at: string
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          body_md: string
+          published_at?: string
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          body_md?: string
+          published_at?: string
+          created_by?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'waivers_created_by_fkey'
+            columns: ['created_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      waiver_signatures: {
+        Row: {
+          id: string
+          waiver_id: string
+          parent_id: string
+          child_id: string | null
+          signature_text: string
+          signed_at: string
+        }
+        Insert: {
+          id?: string
+          waiver_id: string
+          parent_id: string
+          child_id?: string | null
+          signature_text: string
+          signed_at?: string
+        }
+        Update: {
+          id?: string
+          waiver_id?: string
+          parent_id?: string
+          child_id?: string | null
+          signature_text?: string
+          signed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'waiver_signatures_waiver_id_fkey'
+            columns: ['waiver_id']
+            isOneToOne: false
+            referencedRelation: 'waivers'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'waiver_signatures_parent_id_fkey'
+            columns: ['parent_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'waiver_signatures_child_id_fkey'
+            columns: ['child_id']
+            isOneToOne: false
+            referencedRelation: 'children'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>
@@ -360,3 +444,5 @@ export type Session = Database['public']['Tables']['sessions']['Row']
 export type SessionCredit = Database['public']['Tables']['session_credits']['Row']
 export type Attendance = Database['public']['Tables']['attendance']['Row']
 export type WalkIn = Database['public']['Tables']['walk_ins']['Row']
+export type Waiver = Database['public']['Tables']['waivers']['Row']
+export type WaiverSignature = Database['public']['Tables']['waiver_signatures']['Row']
