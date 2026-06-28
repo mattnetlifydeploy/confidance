@@ -34,6 +34,10 @@ export const PRICING = {
   freeTrial: 0,
 } as const
 
+// Percentage off term passes for 2nd+ child in the same term.
+// Confirm exact value with Becca before launch.
+export const SIBLING_DISCOUNT_PCT = 10
+
 // ─── Term Dates ───
 
 export type TermDef = {

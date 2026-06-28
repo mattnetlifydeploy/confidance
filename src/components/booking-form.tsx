@@ -14,6 +14,7 @@ export function BookingForm() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
   const [trialUsed, setTrialUsed] = useState(false)
+  const [quote, setQuote] = useState<{ amount: number; discountAmount: number; discountPct: number; sessionCount: number } | null>(null)
   const [form, setForm] = useState({
     classType: '' as 'baby-boogie' | 'confidance-kids' | '',
     bookingType: '' as 'free-trial' | 'single-session' | 'term-pass' | '',
@@ -38,6 +39,54 @@ export function BookingForm() {
       }))
     }
   }, [profile])
+
+  // Fetch live quote for term-pass on step 5
+  useEffect(() => {
+    setQuote(null)
+
+    if (step !== 5 || form.bookingType !== 'term-pass') return
+    if (!user?.id) return
+
+    let childIdToUse = form.childId
+    if (!childIdToUse && form.childName) {
+      const matchedChild = children.find((c) => c.name.toLowerCase() === form.childName.toLowerCase())
+      childIdToUse = matchedChild?.id || ''
+    }
+
+    if (!childIdToUse || !form.selectedTerm) return
+
+    const controller = new AbortController()
+
+    const fetchQuote = async () => {
+      try {
+        const response = await fetch('/api/quote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            bookingType: 'term-pass',
+            parentId: user.id,
+            childId: childIdToUse,
+            selectedTerm: form.selectedTerm,
+          }),
+          signal: controller.signal,
+        })
+
+        if (!response.ok) return
+
+        const data = await response.json()
+        if (!controller.signal.aborted) {
+          setQuote(data)
+        }
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return
+        // silent fail on quote fetch
+      }
+    }
+
+    fetchQuote()
+
+    return () => controller.abort()
+  }, [step, form.bookingType, form.childId, form.childName, form.selectedTerm, children, user])
 
   // For adding a new child inline
   const [showAddChild, setShowAddChild] = useState(false)
@@ -635,6 +684,12 @@ export function BookingForm() {
               <SummaryRow label="Parent" value={profile?.full_name || ''} />
               <SummaryRow label="Email" value={profile?.email || ''} />
               <SummaryRow label="Emergency" value={`${form.emergencyContact} (${form.emergencyPhone})`} />
+              {form.bookingType === 'term-pass' && quote && quote.discountPct > 0 && (
+                <SummaryRow
+                  label={`Sibling discount (${quote.discountPct}%)`}
+                  value={`. ${formatPrice(quote.discountAmount)}`}
+                />
+              )}
               <div className="border-t border-border pt-3">
                 <p className="font-heading text-xs font-700 text-warm-gray uppercase tracking-wide">{VENUE.name}</p>
                 <p className="mt-1 text-xs text-charcoal-light">{VENUE.address}</p>
@@ -646,7 +701,7 @@ export function BookingForm() {
                     ? 'Free'
                     : form.bookingType === 'single-session'
                       ? formatPrice(PRICING.single_session_price)
-                      : formatPrice(termPrice)
+                      : formatPrice(quote?.amount ?? termPrice)
                 }
                 highlight
               />

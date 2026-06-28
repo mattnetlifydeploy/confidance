@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe-server'
 import { createClient } from '@supabase/supabase-js'
-import { PRICING, getRemainingSessionCount, VENUE, getNextTerm, getFullTermSessionCount, getCurrentTerm } from '@/lib/constants'
+import { PRICING, getRemainingSessionCount, VENUE, getNextTerm, getFullTermSessionCount, getCurrentTerm, SIBLING_DISCOUNT_PCT } from '@/lib/constants'
+import { computeTermPassPrice } from '@/lib/pricing'
 
 const supabaseAdmin = createClient(
   process.env.SUPABASE_URL || '',
@@ -72,6 +73,8 @@ export async function POST(req: NextRequest) {
           emergency_phone: emergencyPhone || '',
           location: LOCATION,
           status: 'confirmed',
+          term_name: getCurrentTerm().name,
+          term_year: getCurrentTerm().year,
         })
 
       if (bookingError) {
@@ -104,6 +107,8 @@ export async function POST(req: NextRequest) {
           emergency_phone: emergencyPhone || '',
           location: LOCATION,
           status: 'pending',
+          term_name: getCurrentTerm().name,
+          term_year: getCurrentTerm().year,
         })
 
       if (bookingError) {
@@ -125,7 +130,7 @@ export async function POST(req: NextRequest) {
             price_data: {
               currency: 'gbp',
               product_data: {
-                name: `${className} — ${typeLabel}`,
+                name: `${className}: ${typeLabel}`,
                 description: `Booking for ${childName}`,
               },
               unit_amount: amount,
@@ -145,6 +150,34 @@ export async function POST(req: NextRequest) {
     }
 
     if (bookingType === 'term-pass') {
+      const nextTerm = getNextTerm()
+      const isNextTerm = selectedTerm === 'next' && nextTerm
+      const targetTerm = isNextTerm ? nextTerm : getCurrentTerm()
+
+      const { count: existingTermBookingsForParent } = await supabaseAdmin
+        .from('bookings')
+        .select('id', { count: 'exact', head: true })
+        .eq('parent_id', parentId)
+        .eq('booking_type', 'term')
+        .eq('term_name', targetTerm.name)
+        .eq('term_year', targetTerm.year)
+        .neq('child_id', childId)
+        .in('status', ['pending', 'confirmed'])
+
+      const sessionCount = isNextTerm
+        ? getFullTermSessionCount(targetTerm)
+        : getRemainingSessionCount()
+
+      const priced = computeTermPassPrice({
+        sessionCount,
+        pricePerSession: PRICING.termPerSession,
+        siblingDiscountPct: SIBLING_DISCOUNT_PCT,
+        existingTermBookingsForParent: existingTermBookingsForParent ?? 0,
+      })
+
+      const amount = priced.amount
+      const discountPct = priced.discountPct
+
       const { error: bookingError } = await supabaseAdmin
         .from('bookings')
         .insert({
@@ -157,6 +190,9 @@ export async function POST(req: NextRequest) {
           emergency_phone: emergencyPhone || '',
           location: LOCATION,
           status: 'pending',
+          term_name: targetTerm.name,
+          term_year: targetTerm.year,
+          sibling_discount_pct: discountPct,
         })
 
       if (bookingError) {
@@ -166,16 +202,8 @@ export async function POST(req: NextRequest) {
         )
       }
 
-      const nextTerm = getNextTerm()
-      const isNextTerm = selectedTerm === 'next' && nextTerm
-      const sessionCount = isNextTerm
-        ? getFullTermSessionCount(nextTerm)
-        : getRemainingSessionCount()
-      const amount = sessionCount * PRICING.termPerSession
-      const termInfo = isNextTerm
-        ? `${nextTerm.name} ${nextTerm.year}`
-        : `${getCurrentTerm().name} ${getCurrentTerm().year}`
-      const typeLabel = `Term Pass — ${termInfo}`
+      const termInfo = `${targetTerm.name} ${targetTerm.year}`
+      const typeLabel = `Term Pass: ${termInfo}`
 
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
@@ -186,8 +214,10 @@ export async function POST(req: NextRequest) {
             price_data: {
               currency: 'gbp',
               product_data: {
-                name: `${className} — ${typeLabel}`,
-                description: `Booking for ${childName} (${sessionCount} sessions)`,
+                name: `${className}: ${typeLabel}`,
+                description: discountPct > 0
+                  ? `Booking for ${childName} (${sessionCount} sessions, ${discountPct}% sibling discount)`
+                  : `Booking for ${childName} (${sessionCount} sessions)`,
               },
               unit_amount: amount,
             },

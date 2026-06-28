@@ -92,6 +92,9 @@ export type Database = {
           emergency_phone: string
           location: string
           created_at: string
+          term_name: string | null
+          term_year: number | null
+          sibling_discount_pct: number | null
         }
         Insert: {
           id?: string
@@ -104,6 +107,9 @@ export type Database = {
           emergency_phone: string
           location: string
           created_at?: string
+          term_name?: string | null
+          term_year?: number | null
+          sibling_discount_pct?: number | null
         }
         Update: {
           id?: string
@@ -116,6 +122,9 @@ export type Database = {
           emergency_phone?: string
           location?: string
           created_at?: string
+          term_name?: string | null
+          term_year?: number | null
+          sibling_discount_pct?: number | null
         }
         Relationships: [
           {
