@@ -209,6 +209,104 @@ export type Database = {
           },
         ]
       }
+      attendance: {
+        Row: {
+          id: string
+          child_id: string
+          session_date: string
+          class_type: string
+          checked_in_at: string
+          checked_in_by: string | null
+        }
+        Insert: {
+          id?: string
+          child_id: string
+          session_date: string
+          class_type: string
+          checked_in_at?: string
+          checked_in_by?: string | null
+        }
+        Update: {
+          id?: string
+          child_id?: string
+          session_date?: string
+          class_type?: string
+          checked_in_at?: string
+          checked_in_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'attendance_child_id_fkey'
+            columns: ['child_id']
+            isOneToOne: false
+            referencedRelation: 'children'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'attendance_checked_in_by_fkey'
+            columns: ['checked_in_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      walk_ins: {
+        Row: {
+          id: string
+          parent_name: string
+          parent_phone: string | null
+          parent_email: string | null
+          child_name: string
+          child_age: number | null
+          class_type: string
+          session_date: string
+          amount_paid_pence: number | null
+          payment_method: string | null
+          notes: string | null
+          created_at: string
+          created_by: string | null
+        }
+        Insert: {
+          id?: string
+          parent_name: string
+          parent_phone?: string | null
+          parent_email?: string | null
+          child_name: string
+          child_age?: number | null
+          class_type: string
+          session_date: string
+          amount_paid_pence?: number | null
+          payment_method?: string | null
+          notes?: string | null
+          created_at?: string
+          created_by?: string | null
+        }
+        Update: {
+          id?: string
+          parent_name?: string
+          parent_phone?: string | null
+          parent_email?: string | null
+          child_name?: string
+          child_age?: number | null
+          class_type?: string
+          session_date?: string
+          amount_paid_pence?: number | null
+          payment_method?: string | null
+          notes?: string | null
+          created_at?: string
+          created_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'walk_ins_created_by_fkey'
+            columns: ['created_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>
@@ -222,3 +320,5 @@ export type Child = Database['public']['Tables']['children']['Row']
 export type Booking = Database['public']['Tables']['bookings']['Row']
 export type Session = Database['public']['Tables']['sessions']['Row']
 export type SessionCredit = Database['public']['Tables']['session_credits']['Row']
+export type Attendance = Database['public']['Tables']['attendance']['Row']
+export type WalkIn = Database['public']['Tables']['walk_ins']['Row']
