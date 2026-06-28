@@ -11,6 +11,14 @@ import type { Child, Booking } from '@/lib/database.types'
 
 type PastBooking = Booking & { childName: string; className?: string }
 
+type BannerRow = {
+  id: string
+  body: string
+  audience: string
+  published_at: string
+  expires_at: string | null
+}
+
 export default function DashboardPage() {
   const { user, profile, loading, signOut } = useAuth()
   const router = useRouter()
@@ -23,6 +31,9 @@ export default function DashboardPage() {
 
   const [pastBookings, setPastBookings] = useState<PastBooking[]>([])
   const [pastBookingsLoading, setPastBookingsLoading] = useState(true)
+
+  const [banners, setBanners] = useState<BannerRow[]>([])
+  const [bannersLoading, setBannersLoading] = useState(true)
 
   // Fetch children
   useEffect(() => {
@@ -78,6 +89,30 @@ export default function DashboardPage() {
     if (user) fetchPastBookings()
   }, [user, children])
 
+  // Fetch banners
+  useEffect(() => {
+    async function fetchBanners() {
+      if (!user) return
+      try {
+        const supabase = getSupabase()
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) return
+        const res = await fetch('/api/admin/banner', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        })
+        if (res.ok) {
+          const data = await res.json()
+          setBanners(data.banners || [])
+        }
+      } catch {
+        // Silent fail by design: banners are non-critical UI.
+      } finally {
+        setBannersLoading(false)
+      }
+    }
+    if (user) fetchBanners()
+  }, [user])
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-cream pt-20">
@@ -112,6 +147,17 @@ export default function DashboardPage() {
             Sign Out
           </button>
         </div>
+
+        {/* Banners */}
+        {banners.length > 0 && !bannersLoading && (
+          <div className="reveal mt-10 space-y-3">
+            {banners.map((banner) => (
+              <div key={banner.id} className="rounded-3xl bg-coral/10 p-6 shadow-sm card-glow">
+                <p className="text-sm text-charcoal">{banner.body}</p>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Quick Actions */}
         <div className="reveal mt-10 grid gap-4 sm:grid-cols-3">

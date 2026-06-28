@@ -307,6 +307,44 @@ export type Database = {
           },
         ]
       }
+      banners: {
+        Row: {
+          id: string
+          body: string
+          audience: string
+          published_at: string
+          expires_at: string | null
+          created_by: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          body: string
+          audience: string
+          published_at?: string
+          expires_at?: string | null
+          created_by: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          body?: string
+          audience?: string
+          published_at?: string
+          expires_at?: string | null
+          created_by?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'banners_created_by_fkey'
+            columns: ['created_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>
