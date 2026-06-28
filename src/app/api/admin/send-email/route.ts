@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 import { requireAdmin } from '@/lib/admin-auth'
 import { getResend, FROM_ADDRESS } from '@/lib/resend'
+import { auditLog } from '@/lib/audit-log'
 
 const supabaseUrl = process.env.SUPABASE_URL
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -112,6 +113,13 @@ export async function POST(request: NextRequest) {
           { status: 500 },
         )
       }
+      await auditLog(
+        auth.userId,
+        'email.sent',
+        'email',
+        null,
+        { subject: validated.subject, audience: validated.audience, recipientCount: 1 },
+      )
       return NextResponse.json({ sent: 1 })
     }
 
@@ -140,6 +148,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    await auditLog(
+      auth.userId,
+      'email.sent',
+      'email',
+      null,
+      { subject: validated.subject, audience: validated.audience, recipientCount: sent },
+    )
     return NextResponse.json({ sent })
   } catch (error) {
     if (error instanceof z.ZodError) {

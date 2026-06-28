@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { auditLog } from '@/lib/audit-log'
 
 const supabaseUrl = process.env.SUPABASE_URL
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -115,7 +116,16 @@ export async function POST(request: NextRequest) {
       creditsIssued = bookings.length
     }
 
-    // Step 4: Return success response
+    // Step 4: Audit log
+    await auditLog(
+      user.id,
+      'session.cancelled',
+      'session',
+      sessionId,
+      { reason, creditsIssued },
+    )
+
+    // Step 5: Return success response
     return NextResponse.json({
       success: true,
       creditsIssued,

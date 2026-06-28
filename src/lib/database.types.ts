@@ -95,6 +95,7 @@ export type Database = {
           term_name: string | null
           term_year: number | null
           sibling_discount_pct: number | null
+          amount_paid_pence: number
         }
         Insert: {
           id?: string
@@ -110,6 +111,7 @@ export type Database = {
           term_name?: string | null
           term_year?: number | null
           sibling_discount_pct?: number | null
+          amount_paid_pence?: number
         }
         Update: {
           id?: string
@@ -125,6 +127,7 @@ export type Database = {
           term_name?: string | null
           term_year?: number | null
           sibling_discount_pct?: number | null
+          amount_paid_pence?: number
         }
         Relationships: [
           {
@@ -205,6 +208,44 @@ export type Database = {
             columns: ['session_id']
             isOneToOne: false
             referencedRelation: 'sessions'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      admin_audit_log: {
+        Row: {
+          id: string
+          actor_id: string | null
+          action: string
+          target_type: string
+          target_id: string | null
+          payload: Record<string, unknown>
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          actor_id?: string | null
+          action: string
+          target_type: string
+          target_id?: string | null
+          payload?: Record<string, unknown>
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          actor_id?: string | null
+          action?: string
+          target_type?: string
+          target_id?: string | null
+          payload?: Record<string, unknown>
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'admin_audit_log_actor_id_fkey'
+            columns: ['actor_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
             referencedColumns: ['id']
           },
         ]
@@ -441,6 +482,8 @@ export type Profile = Database['public']['Tables']['profiles']['Row']
 export type Child = Database['public']['Tables']['children']['Row']
 export type Booking = Database['public']['Tables']['bookings']['Row']
 export type Session = Database['public']['Tables']['sessions']['Row']
+export type AdminAuditLog = Database['public']['Tables']['admin_audit_log']['Row']
+export type AdminAuditLogInsert = Database['public']['Tables']['admin_audit_log']['Insert']
 export type SessionCredit = Database['public']['Tables']['session_credits']['Row']
 export type Attendance = Database['public']['Tables']['attendance']['Row']
 export type WalkIn = Database['public']['Tables']['walk_ins']['Row']

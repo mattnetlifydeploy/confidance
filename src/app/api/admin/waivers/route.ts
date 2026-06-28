@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 import { requireAdmin } from '@/lib/admin-auth'
+import { auditLog } from '@/lib/audit-log'
 
 const supabaseUrl = process.env.SUPABASE_URL
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -46,6 +47,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    await auditLog(
+      auth.userId,
+      'waiver.published',
+      'waiver',
+      data.id,
+      { title: validated.title },
+    )
     return NextResponse.json({ id: data.id })
   } catch (error) {
     if (error instanceof z.ZodError) {
