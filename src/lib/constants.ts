@@ -9,6 +9,7 @@ export const CLASSES = {
   'baby-boogie': {
     name: 'Baby Boogie',
     ages: '2 to 4',
+    ageMax: 4,
     day: 'Thursday',
     time: '3:45pm to 4:15pm',
     durationMins: 30,
@@ -16,6 +17,7 @@ export const CLASSES = {
   'confidance-kids': {
     name: 'Confidance Kids',
     ages: '3 to 6',
+    ageMax: 6,
     day: 'Thursday',
     time: '4:20pm to 4:50pm',
     durationMins: 30,
@@ -204,6 +206,8 @@ export function getRemainingSessionCount(term?: TermDef): number {
 export function getTermPrice(term?: TermDef): number {
   return getRemainingSessionCount(term) * PRICING.termPerSession
 }
+
+export const NUDGE_DAYS_BEFORE_TERM_END = 21
 
 export const CONTACT_EMAIL = 'confidancejessica@gmail.com'
 export const INSTAGRAM_HANDLE = 'confidancecommunity'

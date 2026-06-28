@@ -1,0 +1,6 @@
+{
+  "crons": [
+    { "path": "/api/cron/term-end-rebook", "schedule": "0 9 * * *" },
+    { "path": "/api/cron/age-up", "schedule": "0 9 * * 1" }
+  ]
+}
