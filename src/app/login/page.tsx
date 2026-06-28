@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
+import { getSupabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { AnimatedBubbles } from '@/components/animated-bubbles'
 
@@ -24,7 +25,18 @@ export default function LoginPage() {
       setError(err)
       setLoading(false)
     } else {
-      router.push('/dashboard')
+      const supabase = getSupabase()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', user.id)
+          .single()
+        router.push(profile?.is_admin ? '/admin' : '/dashboard')
+      } else {
+        router.push('/dashboard')
+      }
     }
   }
 
