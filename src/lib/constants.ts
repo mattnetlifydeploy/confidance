@@ -215,5 +215,9 @@ export function getTermPrice(term?: TermDef): number {
 export const NUDGE_DAYS_BEFORE_TERM_END = 21
 
 export const CONTACT_EMAIL = 'confidancejessica@gmail.com'
+// Where new-lead alerts land while we build / launch. Public auto-replies use
+// CONTACT_EMAIL as reply-to (Jessica handles the conversation); internal alerts
+// go here only.
+export const ENQUIRY_ALERT_EMAIL = 'matthewmurphy1511@icloud.com'
 export const INSTAGRAM_HANDLE = 'confidancecommunity'
 export const INSTAGRAM_URL = `https://instagram.com/${INSTAGRAM_HANDLE}`

@@ -2,12 +2,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { enquiryInputSchema } from '@/lib/schools-schema'
 import { createEnquiry } from '@/lib/schools'
-import { getResend, FROM_ADDRESS } from '@/lib/resend'
-import { CONTACT_EMAIL } from '@/lib/constants'
+import { sendEnquiryEmails } from '@/lib/enquiry-emails'
+import { rateLimit, clientIp } from '@/lib/rate-limit'
 
 // Public "For Schools" enquiry form endpoint. No auth: anyone can express interest.
 export async function POST(request: NextRequest) {
   try {
+    const rl = rateLimit(`school:${clientIp(request)}`)
+    if (!rl.ok) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again in a moment.' },
+        { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } },
+      )
+    }
+
     const body = await request.json()
     const v = enquiryInputSchema.parse(body)
 
@@ -27,32 +35,25 @@ export async function POST(request: NextRequest) {
       notes: v.notes,
     })
 
-    // Notify Jessica. Best-effort: the enquiry is already saved, never block on email.
-    try {
-      const lines = [
-        'New "For Schools" enquiry via confidancecommunity.co.uk',
-        '',
-        `School: ${v.schoolName}`,
-        v.schoolType ? `Type: ${v.schoolType}` : null,
-        `Contact: ${v.contactName}`,
-        `Email: ${v.contactEmail}`,
-        v.contactPhone ? `Phone: ${v.contactPhone}` : null,
-        v.estimatedStudents != null ? `Estimated students: ${v.estimatedStudents}` : null,
-        v.preferredDaysTimes ? `Preferred days/times: ${v.preferredDaysTimes}` : null,
-        v.notes ? `Notes: ${v.notes}` : null,
-        '',
-        `Manage in admin under Enquiries (ref ${id}).`,
-      ].filter(Boolean) as string[]
-
-      await getResend().emails.send({
-        from: FROM_ADDRESS,
-        to: CONTACT_EMAIL,
-        subject: `New school enquiry: ${v.schoolName}`,
-        text: lines.join('\n'),
-      })
-    } catch {
-      // Swallow email failures; the enquiry persists regardless.
-    }
+    // Internal alert (to Matt) + warm auto-reply (to the school). Best-effort:
+    // the enquiry is already saved, so email never blocks or throws.
+    await sendEnquiryEmails({
+      kind: 'school',
+      enquirerName: v.contactName,
+      enquirerEmail: v.contactEmail,
+      alertSubject: `New school enquiry: ${v.schoolName}`,
+      alertFields: [
+        { label: 'School', value: v.schoolName },
+        { label: 'Type', value: v.schoolType },
+        { label: 'Contact', value: v.contactName },
+        { label: 'Email', value: v.contactEmail },
+        { label: 'Phone', value: v.contactPhone },
+        { label: 'Estimated students', value: v.estimatedStudents },
+        { label: 'Preferred days/times', value: v.preferredDaysTimes },
+        { label: 'Notes', value: v.notes },
+      ],
+      ref: id,
+    })
 
     return NextResponse.json({ ok: true })
   } catch (error) {
