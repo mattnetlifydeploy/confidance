@@ -39,7 +39,6 @@ export function Nav() {
         <div className="hidden items-center gap-8 md:flex">
           <NavLink href="/about" active={pathname === '/about'}>About</NavLink>
           <NavLink href="/classes" active={pathname === '/classes'}>Classes</NavLink>
-          <NavLink href="/timetable" active={pathname === '/timetable'}>Timetable</NavLink>
           <NavLink href="/faqs" active={pathname === '/faqs'}>FAQs</NavLink>
           <NavLink href="/for-schools" active={pathname === '/for-schools'}>For Schools</NavLink>
           <div className="ml-2 flex items-center gap-3">
@@ -90,7 +89,6 @@ export function Nav() {
           <div className="flex flex-col gap-1 px-6 py-6">
             <MobileLink href="/about" active={pathname === '/about'}>About</MobileLink>
             <MobileLink href="/classes" active={pathname === '/classes'}>Classes</MobileLink>
-            <MobileLink href="/timetable" active={pathname === '/timetable'}>Timetable</MobileLink>
             <MobileLink href="/faqs" active={pathname === '/faqs'}>FAQs</MobileLink>
             <MobileLink href="/for-schools" active={pathname === '/for-schools'}>For Schools</MobileLink>
 

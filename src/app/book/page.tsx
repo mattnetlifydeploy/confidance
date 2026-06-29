@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { getActiveSchools, getDefaultSchoolId } from '@/lib/schools'
 import { BookPageClient } from '@/components/book-page-client'
+import { BookingNotice } from '@/components/booking-notice'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,9 +18,12 @@ export default async function BookPage() {
   ])
 
   return (
-    <BookPageClient
-      schools={schools.map((s) => ({ id: s.id, name: s.name }))}
-      defaultSchoolId={defaultSchoolId}
-    />
+    <>
+      <BookingNotice />
+      <BookPageClient
+        schools={schools.map((s) => ({ id: s.id, name: s.name }))}
+        defaultSchoolId={defaultSchoolId}
+      />
+    </>
   )
 }

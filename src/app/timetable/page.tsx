@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { BookingNotice } from '@/components/booking-notice'
 
 export const metadata: Metadata = {
   title: 'Timetable',
@@ -9,7 +10,9 @@ export const metadata: Metadata = {
 
 export default function TimetablePage() {
   return (
-    <section className="relative flex min-h-[82vh] items-center overflow-hidden bg-cream pt-36 pb-32">
+    <>
+      <BookingNotice />
+      <section className="relative flex min-h-[82vh] items-center overflow-hidden bg-cream pt-12 pb-32">
       <div className="blob absolute -left-40 -top-24 h-[480px] w-[480px] bg-teal-light/12 blur-3xl" />
       <div className="blob absolute -right-32 bottom-[-8rem] h-[420px] w-[420px] bg-teal/15 blur-3xl" />
 
@@ -35,6 +38,7 @@ export default function TimetablePage() {
           </div>
         </div>
       </div>
-    </section>
+      </section>
+    </>
   )
 }
