@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Quicksand, Inter } from 'next/font/google'
+import { Poppins, Outfit, Dancing_Script } from 'next/font/google'
 import './globals.css'
 import { Nav } from '@/components/nav'
 import { Footer } from '@/components/footer'
@@ -7,18 +7,25 @@ import { ScrollReveal } from '@/components/scroll-reveal'
 import { ScrollProgress } from '@/components/scroll-progress'
 import { AuthProvider } from '@/lib/auth-context'
 
-const quicksand = Quicksand({
+const poppins = Poppins({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
   display: 'swap',
-  variable: '--font-quicksand',
+  variable: '--font-poppins',
 })
 
-const inter = Inter({
+const outfit = Outfit({
   subsets: ['latin'],
   weight: ['400', '500', '600'],
   display: 'swap',
-  variable: '--font-inter',
+  variable: '--font-outfit',
+})
+
+const dancingScript = Dancing_Script({
+  subsets: ['latin'],
+  weight: ['500', '600', '700'],
+  display: 'swap',
+  variable: '--font-script',
 })
 
 const siteUrl = 'https://confidance.co.uk'
@@ -95,7 +102,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${quicksand.variable} ${inter.variable}`}>
+    <html lang="en" className={`${poppins.variable} ${outfit.variable} ${dancingScript.variable}`}>
       <head>
         <script
           type="application/ld+json"
@@ -104,7 +111,7 @@ export default function RootLayout({
       </head>
       <body>
         <AuthProvider>
-          <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-lg focus:bg-coral focus:px-4 focus:py-2 focus:text-white focus:shadow-lg">
+          <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-lg focus:bg-teal focus:px-4 focus:py-2 focus:text-white focus:shadow-lg">
             Skip to content
           </a>
           <ScrollProgress />
