@@ -8,7 +8,7 @@ export function Footer() {
       <div className="absolute -left-20 bottom-0 h-40 w-40 rounded-full bg-lilac/5 blur-3xl" />
 
       <div className="relative mx-auto max-w-6xl px-6 py-16">
-        <div className="grid gap-12 md:grid-cols-4">
+        <div className="grid gap-12 md:grid-cols-5">
           {/* Brand */}
           <div className="md:col-span-2">
             <Link href="/" className="group inline-block font-heading text-2xl font-bold">
@@ -69,6 +69,17 @@ export function Footer() {
                 confidancejessica@gmail.com
               </a>
             </div>
+          </div>
+
+          {/* Legal */}
+          <div>
+            <h4 className="font-heading text-sm font-700 uppercase tracking-wider text-white/30">
+              Legal
+            </h4>
+            <ul className="mt-5 space-y-3">
+              <FooterLink href="/privacy">Privacy Policy</FooterLink>
+              <FooterLink href="/terms">Terms & Conditions</FooterLink>
+            </ul>
           </div>
         </div>
 

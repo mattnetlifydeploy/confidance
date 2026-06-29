@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { formatPrice } from '@/lib/stripe'
@@ -827,8 +828,11 @@ export function BookingForm() {
               className="mt-1 h-4 w-4 rounded border-border accent-coral"
             />
             <span className="text-sm text-charcoal-light">
-              I confirm the information above is correct and agree to Confidance&apos;s
-              terms and conditions. I understand that payment is required to secure
+              I confirm the information above is correct and agree to Confidance&apos;s{' '}
+              <Link href="/terms" className="text-coral font-600 hover:text-coral-dark">
+                terms and conditions
+              </Link>
+              . I understand that payment is required to secure
               the booking.
             </span>
           </label>
