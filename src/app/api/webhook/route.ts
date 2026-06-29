@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe-server'
 import { createClient } from '@supabase/supabase-js'
 import { VENUE } from '@/lib/constants'
+import { sendBookingConfirmation } from '@/lib/email-booking-confirmation'
 import type Stripe from 'stripe'
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET || ''
@@ -42,6 +43,35 @@ export async function POST(req: NextRequest) {
         .from('bookings')
         .update({ status: 'confirmed' })
         .eq('id', bookingId)
+
+      // Send the booking confirmation email for paid single/term bookings.
+      const { data: bk } = await supabaseAdmin
+        .from('bookings')
+        .select('id, parent_id, child_id, booking_type, class_type, term_name, term_year')
+        .eq('id', bookingId)
+        .maybeSingle()
+
+      if (bk) {
+        const [{ data: child }, { data: parent }] = await Promise.all([
+          supabaseAdmin.from('children').select('name').eq('id', bk.child_id).maybeSingle(),
+          supabaseAdmin.from('profiles').select('email, full_name').eq('id', bk.parent_id).maybeSingle(),
+        ])
+
+        if (child && parent) {
+          await sendBookingConfirmation(
+            {
+              id: bk.id,
+              parent_id: bk.parent_id,
+              booking_type: bk.booking_type,
+              class_type: bk.class_type,
+              term_name: bk.term_name,
+              term_year: bk.term_year,
+            },
+            { name: child.name },
+            { email: parent.email, full_name: parent.full_name },
+          )
+        }
+      }
     }
   }
 

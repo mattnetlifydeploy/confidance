@@ -3,6 +3,7 @@ import { stripe } from '@/lib/stripe-server'
 import { createClient } from '@supabase/supabase-js'
 import { PRICING, getRemainingSessionCount, VENUE, getNextTerm, getFullTermSessionCount, getCurrentTerm, SIBLING_DISCOUNT_PCT } from '@/lib/constants'
 import { computeTermPassPrice } from '@/lib/pricing'
+import { sendBookingConfirmation } from '@/lib/email-booking-confirmation'
 
 const supabaseAdmin = createClient(
   process.env.SUPABASE_URL || '',
@@ -83,6 +84,22 @@ export async function POST(req: NextRequest) {
           { status: 500 },
         )
       }
+
+      // Trial bookings are confirmed immediately (no payment), so email here.
+      // The paid single/term paths email from the Stripe webhook on confirm.
+      await sendBookingConfirmation(
+        {
+          id: bookingId,
+          parent_id: parentId,
+          booking_type: 'trial',
+          class_type: classType,
+          term_name: getCurrentTerm().name,
+          term_year: getCurrentTerm().year,
+        },
+        { name: childName },
+        { email: parentEmail, full_name: null },
+        sessionDate ?? null,
+      )
 
       return NextResponse.json({ success: true })
     }
