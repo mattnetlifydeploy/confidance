@@ -248,6 +248,15 @@ export function BookingForm() {
 
       const result = await res.json()
 
+      if (res.status === 409) {
+        setErrors({
+          submit:
+            'This class is now full. To join the waitlist, email Jessica at confidancejessica@gmail.com.',
+        })
+        setSaving(false)
+        return
+      }
+
       if (result.error) {
         setErrors({ submit: result.error })
         setSaving(false)

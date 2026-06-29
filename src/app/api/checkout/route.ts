@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import { PRICING, getRemainingSessionCount, VENUE, getNextTerm, getFullTermSessionCount, getCurrentTerm, SIBLING_DISCOUNT_PCT } from '@/lib/constants'
 import { computeTermPassPrice } from '@/lib/pricing'
 import { sendBookingConfirmation } from '@/lib/email-booking-confirmation'
+import { isClassFull } from '@/lib/capacity'
 
 const supabaseAdmin = createClient(
   process.env.SUPABASE_URL || '',
@@ -11,6 +12,24 @@ const supabaseAdmin = createClient(
 )
 
 const LOCATION = `${VENUE.name}, ${VENUE.address}`
+
+// A class slot is scoped to class_type within a term. Trials, single sessions
+// and term passes for the same class and term share the same capacity pool.
+async function classIsFull(
+  classType: string,
+  termName: string,
+  termYear: number,
+): Promise<boolean> {
+  const { count } = await supabaseAdmin
+    .from('bookings')
+    .select('id', { count: 'exact', head: true })
+    .eq('class_type', classType)
+    .eq('term_name', termName)
+    .eq('term_year', termYear)
+    .in('status', ['pending', 'confirmed'])
+
+  return isClassFull(count ?? 0)
+}
 
 export async function POST(req: NextRequest) {
   if (!stripe) {
@@ -62,6 +81,10 @@ export async function POST(req: NextRequest) {
         )
       }
 
+      if (await classIsFull(classType, getCurrentTerm().name, getCurrentTerm().year)) {
+        return NextResponse.json({ error: 'Class full' }, { status: 409 })
+      }
+
       const { error: bookingError } = await supabaseAdmin
         .from('bookings')
         .insert({
@@ -110,6 +133,10 @@ export async function POST(req: NextRequest) {
           { error: 'sessionDate required for single-session booking' },
           { status: 400 },
         )
+      }
+
+      if (await classIsFull(classType, getCurrentTerm().name, getCurrentTerm().year)) {
+        return NextResponse.json({ error: 'Class full' }, { status: 409 })
       }
 
       const { error: bookingError } = await supabaseAdmin
@@ -194,6 +221,10 @@ export async function POST(req: NextRequest) {
 
       const amount = priced.amount
       const discountPct = priced.discountPct
+
+      if (await classIsFull(classType, targetTerm.name, targetTerm.year)) {
+        return NextResponse.json({ error: 'Class full' }, { status: 409 })
+      }
 
       const { error: bookingError } = await supabaseAdmin
         .from('bookings')
