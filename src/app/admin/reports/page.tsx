@@ -2,6 +2,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { CLASSES, TERMS, type TermDef } from '@/lib/constants'
 import type { Database, Booking, Attendance } from '@/lib/database.types'
 import type { ClassType } from '@/lib/constants'
+import { formatPence, formatRefundRow } from '@/lib/refund-formatter'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,10 +26,6 @@ function termKey(name: string, year: number): TermKey {
 
 function termLabel(name: string, year: number): string {
   return `${name} ${year}`
-}
-
-function formatPence(pence: number): string {
-  return `£${(pence / 100).toFixed(2)}`
 }
 
 function findTermForDate(iso: string): TermDef | null {
@@ -70,6 +67,17 @@ type FillGroup = {
   termYear: number
   total: number
   rows: FillRow[]
+}
+
+type RefundRow = {
+  date: string
+  parentName: string
+  parentEmail: string
+  childName: string
+  originalAmountPence: number
+  refundAmountPence: number
+  reason: string
+  processedBy: string
 }
 
 async function loadRevenue(): Promise<RevenueGroup[]> {
@@ -180,21 +188,107 @@ function classLabel(classType: string): string {
   return CLASSES[classType as ClassType]?.name ?? classType
 }
 
+async function loadRefunds(): Promise<RefundRow[]> {
+  const { data: auditLogs, error: auditError } = await supabase
+    .from('admin_audit_log')
+    .select('id, actor_id, created_at, payload, target_id')
+    .eq('action', 'refund_processed')
+    .order('created_at', { ascending: false })
+
+  if (auditError) {
+    throw new Error(`Failed to load refunds: ${auditError.message}`)
+  }
+
+  if (!auditLogs || auditLogs.length === 0) {
+    return []
+  }
+
+  const refunds: RefundRow[] = []
+
+  for (const log of auditLogs) {
+    const payload = log.payload as Record<string, unknown>
+    const refundAmountPence = typeof payload.amount === 'number' ? payload.amount : 0
+    const reason = typeof payload.reason === 'string' ? payload.reason : 'Session cancelled'
+
+    // Get actor profile
+    let actorName = log.actor_id || 'Unknown'
+    if (log.actor_id) {
+      const { data: actor } = await supabase
+        .from('profiles')
+        .select('full_name, email')
+        .eq('id', log.actor_id)
+        .single()
+
+      if (actor) {
+        actorName = actor.full_name || actor.email || log.actor_id
+      }
+    }
+
+    // Get bookings for this session to resolve parent and child
+    if (log.target_id) {
+      const { data: bookings } = await supabase
+        .from('bookings')
+        .select('parent_id, child_id, amount_paid_pence')
+        .eq('session_id', log.target_id)
+        .eq('status', 'confirmed')
+        .limit(100)
+
+      if (bookings && bookings.length > 0) {
+        for (const booking of bookings) {
+          // Get parent profile
+          const { data: parent } = await supabase
+            .from('profiles')
+            .select('full_name, email')
+            .eq('id', booking.parent_id)
+            .single()
+
+          // Get child profile
+          const { data: child } = await supabase
+            .from('children')
+            .select('name')
+            .eq('id', booking.child_id)
+            .single()
+
+          const parentName = parent?.full_name || 'Unknown'
+          const parentEmail = parent?.email || 'Unknown'
+          const childName = child?.name || 'Unknown'
+
+          refunds.push({
+            date: log.created_at,
+            parentName,
+            parentEmail,
+            childName,
+            originalAmountPence: booking.amount_paid_pence,
+            refundAmountPence,
+            reason,
+            processedBy: actorName,
+          })
+        }
+      }
+    }
+  }
+
+  return refunds
+}
+
 export default async function ReportsPage() {
   let revenue: RevenueGroup[] = []
   let attendance: AttendanceGroup[] = []
   let fill: FillGroup[] = []
+  let refunds: RefundRow[] = []
   let loadError: string | null = null
 
   try {
-    const [revenueData, attendanceData, fillData] = await Promise.all([
+    const [revenueData, attendanceData, fillData, refundsData] = await Promise.all([
       loadRevenue(),
       loadAttendance(),
       loadFill(),
+      loadRefunds(),
     ])
     revenue = revenueData
     attendance = attendanceData
     fill = fillData
+    refunds = refundsData
   } catch (err) {
     loadError = err instanceof Error ? err.message : 'Failed to load reports'
   }
@@ -322,6 +416,54 @@ export default async function ReportsPage() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+      </section>
+
+      <section className="rounded-3xl bg-white p-6 shadow-sm card-glow">
+        <h3 className="font-heading text-lg font-bold">Refunds</h3>
+        <p className="mt-1 text-sm text-warm-gray">
+          Processed refunds from session cancellations.
+        </p>
+        {refunds.length === 0 ? (
+          <p className="mt-4 text-sm text-warm-gray italic">No refunds processed yet.</p>
+        ) : (
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="px-3 py-2 text-left font-600">Date</th>
+                  <th className="px-3 py-2 text-left font-600">Parent</th>
+                  <th className="px-3 py-2 text-left font-600">Child</th>
+                  <th className="px-3 py-2 text-right font-600">Original Amount</th>
+                  <th className="px-3 py-2 text-right font-600">Refund Amount</th>
+                  <th className="px-3 py-2 text-left font-600">Reason</th>
+                  <th className="px-3 py-2 text-left font-600">Processed By</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {refunds.map((r, i) => (
+                  <tr key={i} className="hover:bg-cream/25">
+                    <td className="px-3 py-3 text-warm-gray">
+                      {new Date(r.date).toLocaleDateString('en-GB')}
+                    </td>
+                    <td className="px-3 py-3">
+                      <div className="font-600">{r.parentName}</div>
+                      <div className="text-xs text-warm-gray">{r.parentEmail}</div>
+                    </td>
+                    <td className="px-3 py-3 font-600">{r.childName}</td>
+                    <td className="px-3 py-3 text-right text-warm-gray">
+                      {formatPence(r.originalAmountPence)}
+                    </td>
+                    <td className="px-3 py-3 text-right font-600 text-coral">
+                      {formatPence(r.refundAmountPence)}
+                    </td>
+                    <td className="px-3 py-3 text-warm-gray">{r.reason}</td>
+                    <td className="px-3 py-3 text-sm">{r.processedBy}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </section>

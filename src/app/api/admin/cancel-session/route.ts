@@ -89,11 +89,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Step 3: Create session_credit records for each booking
-    let creditsIssued = 0
+    // Step 3: Get full booking details for refund amounts
+    const { data: fullBookings, error: fullBookingsError } = await supabase
+      .from('bookings')
+      .select('id, child_id, amount_paid_pence')
+      .eq('session_id', sessionId)
+      .eq('status', 'confirmed')
 
-    if (bookings && bookings.length > 0) {
-      const creditRecords = bookings.map((booking) => ({
+    if (fullBookingsError) {
+      return NextResponse.json(
+        { error: `Failed to fetch booking details: ${fullBookingsError.message}` },
+        { status: 500 },
+      )
+    }
+
+    // Step 4: Create session_credit records for each booking
+    let creditsIssued = 0
+    let totalRefundPence = 0
+
+    if (fullBookings && fullBookings.length > 0) {
+      const creditRecords = fullBookings.map((booking) => ({
         child_id: booking.child_id,
         session_id: sessionId,
         used: false,
@@ -113,10 +128,11 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      creditsIssued = bookings.length
+      creditsIssued = fullBookings.length
+      totalRefundPence = fullBookings.reduce((sum, b) => sum + b.amount_paid_pence, 0)
     }
 
-    // Step 4: Audit log
+    // Step 5: Audit log for session cancellation
     await auditLog(
       user.id,
       'session.cancelled',
@@ -124,6 +140,17 @@ export async function POST(request: NextRequest) {
       sessionId,
       { reason, creditsIssued },
     )
+
+    // Step 6: Audit log for refund processing (if credits issued)
+    if (creditsIssued > 0) {
+      await auditLog(
+        user.id,
+        'refund_processed',
+        'session',
+        sessionId,
+        { amount: totalRefundPence, reason, creditsCount: creditsIssued },
+      )
+    }
 
     // Step 5: Return success response
     return NextResponse.json({
