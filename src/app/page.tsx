@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import type { Metadata } from 'next'
-import { HeroVideo } from '@/components/hero-video'
 
 export const metadata: Metadata = {
   title: 'Confidance | Performer-Led Performing Arts Clubs in Schools',
@@ -57,10 +56,7 @@ export default function Home() {
         <div className="relative mx-auto max-w-6xl px-6">
           <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
             <div>
-              <span className="reveal inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-5 py-2 font-heading text-sm font-600 text-pale backdrop-blur-sm">
-                Performer-led &middot; In partner schools
-              </span>
-              <h1 className="reveal mt-6 font-heading text-4xl font-bold leading-[1.08] md:text-5xl lg:text-6xl">
+              <h1 className="reveal font-heading text-4xl font-bold leading-[1.08] md:text-5xl lg:text-6xl">
                 Building confidence through{' '}
                 <span className="font-script font-600 text-teal-light">performing arts</span>
               </h1>
@@ -88,7 +84,16 @@ export default function Home() {
 
             <div className="reveal-scale relative">
               <div className="img-glow">
-                <HeroVideo />
+                <div className="relative aspect-[3/2] overflow-hidden rounded-3xl border border-white/80 shadow-2xl">
+                  <Image
+                    src="/images/kids-performing-stage.jpg"
+                    alt="A group of young children performing a dance routine together on an outdoor stage"
+                    fill
+                    priority
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    className="object-cover"
+                  />
+                </div>
               </div>
               <p className="reveal mt-6 text-center font-heading text-sm font-600 uppercase tracking-[0.28em] text-teal-light">
                 Inspire &middot; Empower &middot; Shine
@@ -130,7 +135,7 @@ export default function Home() {
           </div>
           <div className="mt-14 grid gap-5 sm:grid-cols-3">
             {DISCIPLINES.map((d, i) => (
-              <div key={d.title} className={`reveal stagger-${i + 1} card-glow rounded-2xl border border-border bg-cream p-7`}>
+              <div key={d.title} className={`reveal stagger-${i + 1} card-glow rounded-2xl border border-teal-border bg-pale p-7`}>
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal/10">
                   <svg className="h-6 w-6 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.7}>
                     <path strokeLinecap="round" strokeLinejoin="round" d={d.icon} />
@@ -143,6 +148,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* mint accent strip */}
+      <div aria-hidden="true" className="h-2 w-full bg-gradient-to-r from-pale via-teal to-pale" />
 
       {/* ═══ TWO AUDIENCES ═══ */}
       <section className="section-padding relative bg-pale-light">
@@ -246,8 +254,11 @@ export default function Home() {
         </div>
       </section>
 
+      {/* mint accent strip */}
+      <div aria-hidden="true" className="h-2 w-full bg-gradient-to-r from-pale via-teal-light to-pale" />
+
       {/* ═══ FEATURED SCHOOLS / LOADING ═══ */}
-      <section className="section-padding relative overflow-hidden bg-cream">
+      <section className="section-padding relative overflow-hidden bg-gradient-to-b from-pale-light to-cream">
         <div className="blob absolute -left-32 top-1/2 h-80 w-80 -translate-y-1/2 bg-teal/10 blur-3xl" />
         <div className="blob absolute -right-24 bottom-[-6rem] h-72 w-72 bg-teal-light/10 blur-3xl" />
         <div className="relative mx-auto max-w-4xl px-6 text-center">
