@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Timetable | Confidance',
+  title: 'Timetable',
   description:
     'Once your school signs up, your child’s class times will appear on the Confidance timetable here.',
 }

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Our Classes | Confidance',
+  title: 'Our Classes',
   description:
     'After School Musical Theatre Clubs. Performer-led singing, acting and dance for primary-school children. Supportive, age-appropriate and designed to create joy.',
 }
@@ -100,7 +100,7 @@ export default function ClassesPage() {
       </section>
 
       {/* ═══ BENEFITS ═══ */}
-      <section className="section-padding relative bg-cream">
+      <section className="section-padding relative overflow-hidden bg-cream">
         <div className="blob absolute -right-32 -top-24 h-[520px] w-[520px] bg-teal/20 blur-3xl" />
 
         <div className="relative mx-auto max-w-6xl px-6">

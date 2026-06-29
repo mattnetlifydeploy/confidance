@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import { FaqAccordion } from '@/components/faq-accordion'
 
 export const metadata: Metadata = {
-  title: 'FAQs for Schools | Confidance',
+  title: 'FAQs for Schools',
   description: 'Frequently asked questions about bringing Confidance performing arts clubs to your school.',
 }
 
