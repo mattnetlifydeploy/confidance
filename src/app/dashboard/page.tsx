@@ -314,19 +314,31 @@ export default function DashboardPage() {
                           {whatToBring()}
                         </div>
 
-                        <button
-                          onClick={async () => {
-                            if (!confirm('Are you sure you want to cancel this booking?')) return
-                            const supabase = getSupabase()
-                            await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', booking.id)
-                            setPastBookings((prev) =>
-                              prev.map((b) => b.id === booking.id ? { ...b, status: 'cancelled' } : b),
-                            )
-                          }}
-                          className="rounded-full bg-red-50 px-3 py-1.5 text-xs font-600 text-red-600 transition-all hover:bg-red-100"
-                        >
-                          Cancel Booking
-                        </button>
+                        <div className="flex flex-wrap gap-2 pt-2">
+                          {booking.stripe_session_id && (
+                            <a
+                              href={`/api/bookings/${booking.id}/invoice`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-600 text-blue-600 transition-all hover:bg-blue-100"
+                            >
+                              Download Invoice
+                            </a>
+                          )}
+                          <button
+                            onClick={async () => {
+                              if (!confirm('Are you sure you want to cancel this booking?')) return
+                              const supabase = getSupabase()
+                              await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', booking.id)
+                              setPastBookings((prev) =>
+                                prev.map((b) => b.id === booking.id ? { ...b, status: 'cancelled' } : b),
+                              )
+                            }}
+                            className="rounded-full bg-red-50 px-3 py-1.5 text-xs font-600 text-red-600 transition-all hover:bg-red-100"
+                          >
+                            Cancel Booking
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )
@@ -601,22 +613,34 @@ function BookingHistoryCard({ booking, onCancel }: { booking: PastBooking; onCan
         <span>Child: <strong className="text-charcoal">{booking.childName}</strong></span>
         <span>Booked: <strong className="text-charcoal">{formattedDate}</strong></span>
         <span>Class: <strong className="text-charcoal">{booking.className}</strong></span>
-        {booking.status === 'confirmed' && onCancel && (
-          <button
-            onClick={async () => {
-              if (!confirm('Are you sure you want to cancel this booking?')) return
-              setCancelling(true)
-              const supabase = getSupabase()
-              await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', booking.id)
-              onCancel(booking.id)
-              setCancelling(false)
-            }}
-            disabled={cancelling}
-            className="ml-auto rounded-full bg-red-50 px-4 py-1.5 text-xs font-600 text-red-600 transition-all hover:bg-red-100 disabled:opacity-50"
-          >
-            {cancelling ? 'Cancelling...' : 'Cancel Booking'}
-          </button>
-        )}
+        <div className="ml-auto flex gap-2">
+          {booking.stripe_session_id && (
+            <a
+              href={`/api/bookings/${booking.id}/invoice`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-full bg-blue-50 px-4 py-1.5 text-xs font-600 text-blue-600 transition-all hover:bg-blue-100"
+            >
+              Download Invoice
+            </a>
+          )}
+          {booking.status === 'confirmed' && onCancel && (
+            <button
+              onClick={async () => {
+                if (!confirm('Are you sure you want to cancel this booking?')) return
+                setCancelling(true)
+                const supabase = getSupabase()
+                await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', booking.id)
+                onCancel(booking.id)
+                setCancelling(false)
+              }}
+              disabled={cancelling}
+              className="rounded-full bg-red-50 px-4 py-1.5 text-xs font-600 text-red-600 transition-all hover:bg-red-100 disabled:opacity-50"
+            >
+              {cancelling ? 'Cancelling...' : 'Cancel Booking'}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )

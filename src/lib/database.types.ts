@@ -99,6 +99,7 @@ export type Database = {
           term_year: number | null
           sibling_discount_pct: number | null
           amount_paid_pence: number
+          stripe_session_id: string | null
         }
         Insert: {
           id?: string
@@ -115,6 +116,7 @@ export type Database = {
           term_year?: number | null
           sibling_discount_pct?: number | null
           amount_paid_pence?: number
+          stripe_session_id?: string | null
         }
         Update: {
           id?: string
@@ -131,6 +133,7 @@ export type Database = {
           term_year?: number | null
           sibling_discount_pct?: number | null
           amount_paid_pence?: number
+          stripe_session_id?: string | null
         }
         Relationships: [
           {

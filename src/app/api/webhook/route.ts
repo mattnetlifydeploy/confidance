@@ -85,10 +85,10 @@ export async function POST(req: NextRequest) {
     const bookingId = session.metadata?.booking_id
 
     if (bookingId) {
-      // Update booking status (no payment_intent_id column in DB)
+      // Update booking status and store stripe_session_id for invoice retrieval
       await supabaseAdmin
         .from('bookings')
-        .update({ status: 'confirmed' })
+        .update({ status: 'confirmed', stripe_session_id: session.id })
         .eq('id', bookingId)
 
       // Send the booking confirmation email for paid single/term bookings.
