@@ -41,6 +41,7 @@ export function Nav() {
           <NavLink href="/classes" active={pathname === '/classes'}>Classes</NavLink>
           <NavLink href="/timetable" active={pathname === '/timetable'}>Timetable</NavLink>
           <NavLink href="/faqs" active={pathname === '/faqs'}>FAQs</NavLink>
+          <NavLink href="/for-schools" active={pathname === '/for-schools'}>For Schools</NavLink>
           <div className="ml-2 flex items-center gap-3">
             {user ? (
               <Link
@@ -91,6 +92,7 @@ export function Nav() {
             <MobileLink href="/classes" active={pathname === '/classes'}>Classes</MobileLink>
             <MobileLink href="/timetable" active={pathname === '/timetable'}>Timetable</MobileLink>
             <MobileLink href="/faqs" active={pathname === '/faqs'}>FAQs</MobileLink>
+            <MobileLink href="/for-schools" active={pathname === '/for-schools'}>For Schools</MobileLink>
 
             <div className="mt-4 border-t border-border pt-4">
               {user ? (
