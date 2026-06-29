@@ -4,6 +4,9 @@
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import type { School, SchoolEnquiry, EnquiryStatus } from './schools-schema'
+import { ENQUIRY_STATUSES } from './schools-schema'
+
+export { ENQUIRY_STATUSES }
 
 let client: SupabaseClient | null = null
 
