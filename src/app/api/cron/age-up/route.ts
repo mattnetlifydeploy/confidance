@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { requireCronSecret } from '@/lib/cron-auth'
 import { getCurrentTerm, CLASSES } from '@/lib/constants'
 import { getResend, FROM_ADDRESS } from '@/lib/resend'
+import { logAdminMessage } from '@/lib/admin-messages'
 import { selectAgeUpCandidates, type AgeUpBooking, type AgeUpChild } from '@/lib/age-up'
 
 const supabaseUrl = process.env.SUPABASE_URL
@@ -147,6 +148,18 @@ Confidance`
         { status: 500 },
       )
     }
+
+    // Log summary row with first resend id for batch tracking
+    const firstResendId = result.data?.data?.[0]?.id || null
+    await logAdminMessage({
+      sentBy: null,
+      channel: 'email',
+      audience: { type: 'age_up' },
+      subject: 'Age-up notification',
+      body: 'Age-up notification email',
+      recipientCount: sent,
+      resendId: firstResendId,
+    })
 
     return NextResponse.json({ sent, candidates: candidates.length })
   } catch (error) {

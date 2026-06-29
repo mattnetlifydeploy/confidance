@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { requireAdmin } from '@/lib/admin-auth'
 import { getResend, FROM_ADDRESS } from '@/lib/resend'
 import { auditLog } from '@/lib/audit-log'
+import { logAdminMessage } from '@/lib/admin-messages'
 
 const supabaseUrl = process.env.SUPABASE_URL
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -113,6 +114,23 @@ export async function POST(request: NextRequest) {
           { status: 500 },
         )
       }
+      const resendId = result.data?.id || null
+      const audienceObj: Record<string, unknown> = { parsedType: parsed.type }
+      if (parsed.type === 'class') {
+        audienceObj.classType = (parsed as { type: string; classType: string }).classType
+      } else if (parsed.type === 'term') {
+        audienceObj.termName = (parsed as { type: string; termName: string }).termName
+        audienceObj.termYear = (parsed as { type: string; termYear: number }).termYear
+      }
+      await logAdminMessage({
+        sentBy: auth.userId,
+        channel: 'email',
+        audience: audienceObj,
+        subject: validated.subject,
+        body: validated.body,
+        recipientCount: 1,
+        resendId,
+      })
       await auditLog(
         auth.userId,
         'email.sent',
@@ -147,6 +165,25 @@ export async function POST(request: NextRequest) {
         { status: 500 },
       )
     }
+
+    // Log one summary row with first resend id for batch tracking
+    const firstResendId = result.data?.data?.[0]?.id || null
+    const batchAudienceObj: Record<string, unknown> = { parsedType: parsed.type }
+    if (parsed.type === 'class') {
+      batchAudienceObj.classType = (parsed as { type: string; classType: string }).classType
+    } else if (parsed.type === 'term') {
+      batchAudienceObj.termName = (parsed as { type: string; termName: string }).termName
+      batchAudienceObj.termYear = (parsed as { type: string; termYear: number }).termYear
+    }
+    await logAdminMessage({
+      sentBy: auth.userId,
+      channel: 'email',
+      audience: batchAudienceObj,
+      subject: validated.subject,
+      body: validated.body,
+      recipientCount: sent,
+      resendId: firstResendId,
+    })
 
     await auditLog(
       auth.userId,

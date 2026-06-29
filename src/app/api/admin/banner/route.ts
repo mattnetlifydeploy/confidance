@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 import { requireAdmin } from '@/lib/admin-auth'
 import { auditLog } from '@/lib/audit-log'
+import { logAdminMessage } from '@/lib/admin-messages'
 
 const supabaseUrl = process.env.SUPABASE_URL
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -79,6 +80,34 @@ export async function POST(request: NextRequest) {
         { status: 500 },
       )
     }
+
+    // Parse audience to get recipient count
+    let recipientCount: number | null = null
+    if (parsed.type === 'all') {
+      const { count } = await supabase
+        .from('bookings')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'confirmed')
+      recipientCount = count ?? null
+    }
+
+    const audienceObj: Record<string, unknown> = { parsedType: parsed.type }
+    if (parsed.type === 'class') {
+      audienceObj.classType = (parsed as { type: string; classType: string }).classType
+    } else if (parsed.type === 'term') {
+      audienceObj.termName = (parsed as { type: string; termName: string }).termName
+      audienceObj.termYear = (parsed as { type: string; termYear: number }).termYear
+    }
+
+    await logAdminMessage({
+      sentBy: auth.userId,
+      channel: 'banner',
+      audience: audienceObj,
+      subject: null,
+      body: validated.body,
+      recipientCount,
+      resendId: null,
+    })
 
     await auditLog(
       auth.userId,

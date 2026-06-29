@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { requireCronSecret } from '@/lib/cron-auth'
 import { getCurrentTerm, getNextTerm, NUDGE_DAYS_BEFORE_TERM_END } from '@/lib/constants'
 import { getResend, FROM_ADDRESS } from '@/lib/resend'
+import { logAdminMessage } from '@/lib/admin-messages'
 import { isWithinTermEndWindow, selectRebookParentIds, type Booking } from '@/lib/term-end-rebook'
 
 const supabaseUrl = process.env.SUPABASE_URL
@@ -109,6 +110,19 @@ Confidance`
         { status: 500 },
       )
     }
+
+    // Log summary row with first resend id for batch tracking
+    const firstResendId = result.data?.data?.[0]?.id || null
+    const emailSubject = `Book your child in for ${next.name} Term ${next.year}`
+    await logAdminMessage({
+      sentBy: null,
+      channel: 'email',
+      audience: { type: 'term_end_rebook', term: `${next.name}-${next.year}` },
+      subject: emailSubject,
+      body: 'Term end rebook email',
+      recipientCount: sent,
+      resendId: firstResendId,
+    })
 
     return NextResponse.json({ sent, candidates: targetParentIds.length, term: `${next.name}-${next.year}` })
   } catch (error) {

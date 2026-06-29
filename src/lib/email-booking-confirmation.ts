@@ -1,5 +1,6 @@
 import { getResend, FROM_ADDRESS } from './resend'
 import { auditLog } from './audit-log'
+import { logAdminMessage } from './admin-messages'
 import { CLASSES, VENUE, CONTACT_EMAIL, TERMS, getTermSessionDates, type ClassType } from './constants'
 
 export const BOOKING_CONFIRMATION_SUBJECT = 'Your Confidance booking is confirmed'
@@ -101,16 +102,26 @@ export async function sendBookingConfirmation(
     if (!parent.email) return
     const { subject, text } = formatBookingConfirmation(booking, child, parent, sessionDate)
     const resend = getResend()
-    const { error } = await resend.emails.send({
+    const result = await resend.emails.send({
       from: FROM_ADDRESS,
       to: parent.email,
       subject,
       text,
     })
+    const resendId = result.data?.id || null
+    await logAdminMessage({
+      sentBy: null,
+      channel: 'email',
+      audience: { bookingId: booking.id },
+      subject,
+      body: text,
+      recipientCount: 1,
+      resendId,
+    })
     await auditLog(booking.parent_id, 'booking_confirmation_email', 'booking', booking.id, {
       to: parent.email,
-      ok: !error,
-      error: error ? error.message : null,
+      ok: !result.error,
+      error: result.error ? result.error.message : null,
     })
   } catch {
     // fire-and-forget: a failed confirmation email must never break a booking

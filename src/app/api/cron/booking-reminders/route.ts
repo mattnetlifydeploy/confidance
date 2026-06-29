@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireCronSecret } from '@/lib/cron-auth'
 import { getResend, FROM_ADDRESS } from '@/lib/resend'
+import { logAdminMessage } from '@/lib/admin-messages'
 import { selectRemindersForDate, formatReminderEmail, type ReminderBooking } from '@/lib/booking-reminders'
 
 const supabaseUrl = process.env.SUPABASE_URL
@@ -115,6 +116,18 @@ async function runJob(request: NextRequest) {
         { status: 500 },
       )
     }
+
+    // Log summary row with first resend id for batch tracking
+    const firstResendId = result.data?.data?.[0]?.id || null
+    await logAdminMessage({
+      sentBy: null,
+      channel: 'email',
+      audience: { type: 'booking_reminders', targetDate },
+      subject: 'Booking Reminder',
+      body: 'Booking reminder emails',
+      recipientCount: sent,
+      resendId: firstResendId,
+    })
 
     return NextResponse.json({ sent, candidates: candidates.length, targetDate })
   } catch (error) {

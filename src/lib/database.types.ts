@@ -470,6 +470,56 @@ export type Database = {
           },
         ]
       }
+      admin_messages_log: {
+        Row: {
+          id: string
+          sent_at: string
+          sent_by: string | null
+          channel: string
+          audience: Record<string, unknown> | null
+          subject: string | null
+          body: string | null
+          recipient_count: number | null
+          resend_id: string | null
+          delivery_status: Record<string, unknown>
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          sent_at?: string
+          sent_by?: string | null
+          channel: string
+          audience?: Record<string, unknown> | null
+          subject?: string | null
+          body?: string | null
+          recipient_count?: number | null
+          resend_id?: string | null
+          delivery_status?: Record<string, unknown>
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          sent_at?: string
+          sent_by?: string | null
+          channel?: string
+          audience?: Record<string, unknown> | null
+          subject?: string | null
+          body?: string | null
+          recipient_count?: number | null
+          resend_id?: string | null
+          delivery_status?: Record<string, unknown>
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'admin_messages_log_sent_by_fkey'
+            columns: ['sent_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>
@@ -489,3 +539,5 @@ export type Attendance = Database['public']['Tables']['attendance']['Row']
 export type WalkIn = Database['public']['Tables']['walk_ins']['Row']
 export type Waiver = Database['public']['Tables']['waivers']['Row']
 export type WaiverSignature = Database['public']['Tables']['waiver_signatures']['Row']
+export type AdminMessagesLog = Database['public']['Tables']['admin_messages_log']['Row']
+export type AdminMessagesLogInsert = Database['public']['Tables']['admin_messages_log']['Insert']
