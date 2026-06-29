@@ -79,8 +79,7 @@ export default function TermsPage() {
           <ul>
             <li>Classes are scheduled for a set term and term dates are published in advance</li>
             <li>Single session dates can be rescheduled if spaces are available in another class</li>
-            <li>Requests must be made at least 48 hours in advance</li>
-            <li>No refund will be given if a rescheduled class is moved to a later date at no cost</li>
+            <li>Reschedules made 24 hours or more before a session receive a full refund of the original. Reschedules within 24 hours are not refunded but you will receive account credit.</li>
           </ul>
 
           <h2 className="font-heading text-2xl font-bold mt-8">5. Activity Waiver</h2>

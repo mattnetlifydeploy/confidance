@@ -153,6 +153,7 @@ export async function POST(req: NextRequest) {
           status: 'pending',
           term_name: getCurrentTerm().name,
           term_year: getCurrentTerm().year,
+          session_date: sessionDate,
         })
 
       if (bookingError) {

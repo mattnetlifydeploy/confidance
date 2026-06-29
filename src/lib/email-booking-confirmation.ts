@@ -78,6 +78,8 @@ Venue: ${VENUE.name}, ${VENUE.address}
 
 What to bring: a water bottle and comfy clothes your child can move and dance in.
 
+Rescheduling policy: Reschedules made 24 hours or more before a session receive a full refund of the original. Reschedules within 24 hours are not refunded but you will receive account credit.
+
 Booking reference: ${ref}
 
 To cancel or reschedule, contact us at ${CONTACT_EMAIL}.
