@@ -6,6 +6,8 @@ const supabaseAdmin = process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_R
   ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
   : null
 
+// Stripe's expanded Checkout Session type is deeply nested and varies by
+// expansion, so we read the few fields we need off a loose shape.
 function pickInvoiceUrl(session: any): string | null {
   if (session.invoice?.hosted_invoice_url) {
     return session.invoice.hosted_invoice_url
@@ -18,7 +20,7 @@ function pickInvoiceUrl(session: any): string | null {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   if (!stripe || !supabaseAdmin) {
     return NextResponse.json({ error: 'Service unavailable' }, { status: 503 })
@@ -39,7 +41,7 @@ export async function GET(
 
   const parentId = user.id
 
-  const bookingId = params.id
+  const bookingId = (await params).id
 
   try {
     // Load booking; verify parent owns it
@@ -81,9 +83,7 @@ export async function GET(
 
     // Redirect to the invoice (307 temporary redirect to preserve method, but effectively becomes GET)
     return NextResponse.redirect(invoiceUrl, { status: 307 })
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    console.error('Invoice route error:', message)
+  } catch {
     return NextResponse.json(
       { error: 'Failed to retrieve invoice' },
       { status: 500 },
