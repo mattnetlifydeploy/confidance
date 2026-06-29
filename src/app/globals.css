@@ -45,6 +45,22 @@
   --color-charcoal: var(--charcoal);
   --color-charcoal-muted: var(--charcoal-muted);
   --color-charcoal-light: var(--charcoal-light);
+  /* Legacy brand aliases -> new navy/teal/pale palette. Phase 0 bridge so every
+     existing page renders in-brand (the old coral/lilac/gold utility names are
+     used site-wide) until each page is individually redesigned. */
+  --color-coral: var(--teal);
+  --color-coral-dark: var(--teal-dark);
+  --color-coral-light: var(--teal-light);
+  --color-lilac: var(--navy-light);
+  --color-lilac-dark: var(--navy);
+  --color-lilac-light: var(--pale);
+  --color-gold: var(--teal-light);
+  --color-gold-light: var(--pale-light);
+  --color-pastel-peach: var(--pale-light);
+  --color-pastel-lilac: var(--pale);
+  --color-pastel-pink: var(--pale-light);
+  --color-pastel-mint: var(--pale-light);
+  --color-warm-gray: var(--charcoal-light);
   --color-success: var(--success);
   --color-error: var(--error);
   --color-warning: var(--warning);
