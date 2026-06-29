@@ -28,21 +28,21 @@ const dancingScript = Dancing_Script({
   variable: '--font-script',
 })
 
-const siteUrl = 'https://confidance.co.uk'
+const siteUrl = 'https://www.confidancecommunity.co.uk'
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'Confidance | Children\'s Dance & Confidence Classes',
+    default: 'Confidance | Building Confidence Through Performing Arts',
     template: '%s | Confidance',
   },
-  description: 'Helping children aged 2 to 6 grow in confidence, creativity, and self expression through dance, singing, and movement. Classes in your local area.',
-  keywords: ['children dance classes', 'kids confidence', 'baby ballet', 'toddler dance', 'Confidance', 'singing classes', 'kids dance', 'preschool dance', 'children confidence building', 'musical movement'],
+  description: 'Performer-led after-school performing arts clubs in partner schools. Jessica, a professional musical theatre performer, builds children\'s confidence through singing, acting and dance.',
+  keywords: ['performing arts clubs', 'after school clubs', 'school performing arts', 'musical theatre for children', 'singing acting dance', 'children confidence building', 'Confidance', 'KS1 KS2 drama club', 'performer-led clubs', 'school enrichment'],
   authors: [{ name: 'Jessica Murphy' }],
   creator: 'Bright Loop Media',
   openGraph: {
-    title: 'Confidance | Children\'s Dance & Confidence Classes',
-    description: 'Helping children aged 2 to 6 grow in confidence, creativity, and self expression through dance, singing, and movement.',
+    title: 'Confidance | Building Confidence Through Performing Arts',
+    description: 'Performer-led after-school performing arts clubs in partner schools. Singing, acting and dance that build children\'s confidence, creativity and stage presence.',
     url: siteUrl,
     siteName: 'Confidance',
     locale: 'en_GB',
@@ -50,8 +50,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Confidance | Children\'s Dance & Confidence Classes',
-    description: 'Helping children aged 2 to 6 grow in confidence, creativity, and self expression through dance, singing, and movement.',
+    title: 'Confidance | Building Confidence Through Performing Arts',
+    description: 'Performer-led after-school performing arts clubs in partner schools. Singing, acting and dance that build children\'s confidence.',
   },
   robots: {
     index: true,
@@ -73,24 +73,21 @@ const organizationJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'LocalBusiness',
   name: 'Confidance',
-  description: 'Children\'s dance and confidence building classes for ages 2 to 6. Baby Boogie and Confidance classes featuring dance, singing, and movement.',
+  description: 'Performer-led after-school performing arts clubs hosted in partner schools. Singing, acting and dance that build children\'s confidence, creativity and stage presence.',
   url: siteUrl,
   email: 'confidancejessica@gmail.com',
   founder: {
     '@type': 'Person',
     name: 'Jessica Murphy',
-    jobTitle: 'Founder & Lead Teacher',
-    alumniOf: {
-      '@type': 'CollegeOrUniversity',
-      name: 'Trinity Laban Conservatoire of Music and Dance',
-    },
+    jobTitle: 'Founder, Musical Theatre Performer and Lead Teacher',
   },
   areaServed: {
     '@type': 'Country',
     name: 'United Kingdom',
   },
-  priceRange: '$$',
-  serviceType: 'Children\'s Dance Classes',
+  priceRange: '££',
+  serviceType: 'After-school performing arts clubs',
+  slogan: 'Building confidence through performing arts',
   sameAs: [
     'https://instagram.com/confidancecommunity',
   ],
@@ -102,7 +99,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${poppins.variable} ${outfit.variable} ${dancingScript.variable}`}>
+    <html lang="en-GB" className={`${poppins.variable} ${outfit.variable} ${dancingScript.variable}`}>
       <head>
         <script
           type="application/ld+json"
