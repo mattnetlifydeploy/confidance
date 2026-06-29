@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import type { Metadata } from 'next'
 import { SchoolEnquiryForm } from '@/components/school-enquiry-form'
+import { PlayfulMotionBg } from '@/components/playful-motion-bg'
 
 export const metadata: Metadata = {
   title: 'For Schools',
@@ -51,6 +52,7 @@ export default function ForSchoolsPage() {
       <section className="relative overflow-hidden bg-navy pt-36 pb-28 text-white">
         <div className="blob absolute -right-32 -top-24 h-[520px] w-[520px] bg-teal/20 blur-3xl" />
         <div className="blob absolute -left-40 bottom-[-10rem] h-[480px] w-[480px] bg-teal-light/10 blur-3xl" />
+        <PlayfulMotionBg variant="navy" />
         <div className="relative mx-auto max-w-6xl px-6">
           <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
             <div>

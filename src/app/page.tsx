@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import type { Metadata } from 'next'
+import { PlayfulMotionBg } from '@/components/playful-motion-bg'
 
 export const metadata: Metadata = {
   title: { absolute: 'Confidance | After-School Performing Arts Clubs in Schools' },
@@ -261,6 +262,7 @@ export default function Home() {
       <section className="section-padding relative overflow-hidden bg-gradient-to-b from-pale-light to-cream">
         <div className="blob absolute -left-32 top-1/2 h-80 w-80 -translate-y-1/2 bg-teal/10 blur-3xl" />
         <div className="blob absolute -right-24 bottom-[-6rem] h-72 w-72 bg-teal-light/10 blur-3xl" />
+        <PlayfulMotionBg variant="light" />
         <div className="relative mx-auto max-w-4xl px-6 text-center">
           <p className="reveal font-heading text-sm font-600 uppercase tracking-[0.2em] text-teal">Where we run</p>
           <h2 className="reveal mt-3 font-heading text-3xl font-bold text-navy md:text-4xl">

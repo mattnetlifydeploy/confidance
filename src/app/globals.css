@@ -734,3 +734,51 @@ h1, h2, h3, h4, h5, h6 {
 .auth-input::placeholder {
   color: var(--charcoal-muted);
 }
+
+/* ─── Playful motion background (Chunk 2 repositioning) ─── */
+/* Slow, GPU-only drifting orbs behind select hero / CTA bands. Gated by
+   IntersectionObserver (data-active) so it never animates off-screen,
+   transform/opacity only, hidden under 768px, off for reduced-motion.
+   No z-index: matches the .blob pattern so section content paints on top. */
+
+.pmb {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.pmb-shape {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(44px);
+  will-change: transform;
+  animation-play-state: paused;
+}
+
+.pmb[data-active="true"] .pmb-shape {
+  animation-play-state: running;
+}
+
+@keyframes pmb-drift-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(26px, -34px, 0) scale(1.08); }
+}
+
+@keyframes pmb-drift-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.04); }
+  50% { transform: translate3d(-30px, 22px, 0) scale(0.94); }
+}
+
+@keyframes pmb-drift-c {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(18px, 28px, 0) scale(1.1); }
+}
+
+@media (max-width: 767px) {
+  .pmb { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pmb-shape { animation: none; }
+}
