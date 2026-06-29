@@ -43,7 +43,7 @@ export const SIBLING_DISCOUNT_PCT = 10
 // Max active (pending + confirmed) bookings per class per term.
 // Flat for now; can be split per class_type later if Baby Boogie and
 // Confidance Kids need different caps.
-export const MAX_BOOKINGS_PER_CLASS = 12
+export const MAX_BOOKINGS_PER_CLASS = 15
 
 // ─── Term Dates ───
 
