@@ -49,6 +49,8 @@ export default function DashboardPage() {
   const [signingWaiverId, setSigningWaiverId] = useState<string | null>(null)
   const [waiverSignatureText, setWaiverSignatureText] = useState('')
 
+  const [rescheduleBookingId, setRescheduleBookingId] = useState<string | null>(null)
+
   // Fetch children
   useEffect(() => {
     async function fetchChildren() {
@@ -325,6 +327,14 @@ export default function DashboardPage() {
                               Download Invoice
                             </a>
                           )}
+                          {booking.booking_type === 'single' && (
+                            <button
+                              onClick={() => setRescheduleBookingId(booking.id)}
+                              className="rounded-full bg-indigo-50 px-3 py-1.5 text-xs font-600 text-indigo-600 transition-all hover:bg-indigo-100"
+                            >
+                              Reschedule
+                            </button>
+                          )}
                           <button
                             onClick={async () => {
                               if (!confirm('Are you sure you want to cancel this booking?')) return
@@ -560,6 +570,37 @@ export default function DashboardPage() {
             parentId={user.id}
           />
         )}
+
+        {/* Reschedule Modal */}
+        {rescheduleBookingId && (
+          <RescheduleModal
+            bookingId={rescheduleBookingId}
+            onClose={() => setRescheduleBookingId(null)}
+            onSuccess={async () => {
+              setRescheduleBookingId(null)
+              // Refetch bookings to show updated date
+              if (!user) return
+              const supabase = getSupabase()
+              const { data: bookingsData } = await supabase
+                .from('bookings')
+                .select('*')
+                .eq('parent_id', user.id)
+                .order('created_at', { ascending: false })
+              if (bookingsData && Array.isArray(bookingsData)) {
+                const enriched: PastBooking[] = (bookingsData as Booking[]).map((booking) => {
+                  const child = children.find((c) => c.id === booking.child_id)
+                  const classInfo = CLASSES[booking.class_type as keyof typeof CLASSES]
+                  return {
+                    ...booking,
+                    childName: child?.name || 'Unknown',
+                    className: classInfo?.name || booking.class_type,
+                  } as PastBooking
+                })
+                setPastBookings(enriched)
+              }
+            }}
+          />
+        )}
       </div>
     </section>
   )
@@ -694,6 +735,216 @@ function ChildCard({ child, trialUsed, onDelete }: { child: Child; trialUsed: bo
       <Link href="/book" className="btn-primary mt-4 w-full text-center text-sm">
         Book for {child.name}
       </Link>
+    </div>
+  )
+}
+
+type RescheduleOption = {
+  date: string
+  available: boolean
+}
+
+function RescheduleModal({
+  bookingId,
+  onClose,
+  onSuccess,
+}: {
+  bookingId: string
+  onClose: () => void
+  onSuccess: () => void
+}) {
+  const [options, setOptions] = useState<RescheduleOption[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [successMsg, setSuccessMsg] = useState('')
+
+  useEffect(() => {
+    async function fetchOptions() {
+      try {
+        setError('')
+        const supabase = getSupabase()
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session?.access_token) {
+          setError('Authentication failed')
+          setLoading(false)
+          return
+        }
+
+        const res = await fetch(`/api/bookings/${bookingId}/reschedule-options`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        })
+
+        if (!res.ok) {
+          const data = await res.json()
+          setError(data.error || 'Failed to load available dates')
+          setLoading(false)
+          return
+        }
+
+        const data = await res.json()
+        setOptions(data.options || [])
+        setLoading(false)
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Unknown error'
+        setError(msg)
+        setLoading(false)
+      }
+    }
+
+    fetchOptions()
+  }, [bookingId])
+
+  async function handleConfirm() {
+    if (!selectedDate) return
+
+    setSubmitting(true)
+    setError('')
+
+    try {
+      const supabase = getSupabase()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        setError('Authentication failed')
+        setSubmitting(false)
+        return
+      }
+
+      const res = await fetch(`/api/bookings/${bookingId}/reschedule`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ newDate: selectedDate }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        if (res.status === 409) {
+          setError('This date is now full. Please choose another.')
+        } else {
+          setError(data.error || 'Failed to reschedule')
+        }
+        setSubmitting(false)
+        return
+      }
+
+      setSuccessMsg('Booking rescheduled successfully')
+      setTimeout(() => {
+        onSuccess()
+      }, 1000)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error'
+      setError(msg)
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/50 backdrop-blur-sm px-6">
+      <div className="gradient-border w-full max-w-md">
+        <div className="rounded-3xl bg-white p-8">
+          <div className="flex items-center justify-between">
+            <h2 className="font-heading text-xl font-bold">Reschedule Booking</h2>
+            <button onClick={onClose} className="text-warm-gray hover:text-charcoal transition-colors">
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {loading && (
+            <div className="mt-6 flex justify-center">
+              <div className="flex gap-2">
+                <span className="dancing-dot bg-coral" />
+                <span className="dancing-dot bg-lilac" />
+                <span className="dancing-dot bg-gold" />
+              </div>
+            </div>
+          )}
+
+          {!loading && error && !successMsg && (
+            <div className="mt-6 rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-600">
+              {error}
+            </div>
+          )}
+
+          {!loading && successMsg && (
+            <div className="mt-6 rounded-xl bg-green-50 border border-green-200 p-3 text-sm text-green-600">
+              {successMsg}
+            </div>
+          )}
+
+          {!loading && !successMsg && options.length > 0 && (
+            <div className="mt-6 space-y-4">
+              <div className="text-sm text-warm-gray">
+                Select an available date for your session:
+              </div>
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {options.map((option) => (
+                  <button
+                    key={option.date}
+                    onClick={() => option.available && setSelectedDate(option.date)}
+                    disabled={!option.available}
+                    className={`w-full text-left p-3 rounded-lg border transition-all ${
+                      option.available
+                        ? selectedDate === option.date
+                          ? 'bg-indigo-50 border-indigo-300'
+                          : 'bg-white border-gray-200 hover:bg-gray-50'
+                        : 'bg-gray-100 border-gray-200 opacity-50 cursor-not-allowed'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className={`font-medium ${option.available ? 'text-charcoal' : 'text-charcoal-light'}`}>
+                        {new Date(option.date).toLocaleDateString('en-GB', {
+                          weekday: 'short',
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </span>
+                      {!option.available && (
+                        <span className="text-xs font-600 text-warm-gray">Full</span>
+                      )}
+                      {option.available && selectedDate === option.date && (
+                        <svg className="h-5 w-5 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="btn-secondary flex-1 text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirm}
+                  disabled={!selectedDate || submitting}
+                  className="btn-primary flex-1 text-sm disabled:opacity-50"
+                >
+                  {submitting ? 'Rescheduling...' : 'Confirm'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!loading && !successMsg && options.length === 0 && !error && (
+            <div className="mt-6 rounded-xl bg-blue-50 border border-blue-200 p-3 text-sm text-blue-600">
+              No available dates at this time
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
