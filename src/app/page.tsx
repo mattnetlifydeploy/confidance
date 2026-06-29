@@ -3,7 +3,7 @@ import Image from 'next/image'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Confidance | Performer-Led Performing Arts Clubs in Schools',
+  title: { absolute: 'Confidance | After-School Performing Arts Clubs in Schools' },
   description:
     'Building confidence through performing arts. Jessica, a Musical Theatre performer, leads singing, acting and dance clubs in partner schools. Register your school or browse clubs for your child.',
 }

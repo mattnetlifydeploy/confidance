@@ -94,7 +94,7 @@ export default function FaqsPage() {
             We&apos;re here to help. Email us or register your school for a free taster session.
           </p>
           <div className="reveal mt-10 flex flex-wrap justify-center gap-4">
-            <a href="mailto:hello@confidance.co.uk" className="btn-primary">
+            <a href="mailto:confidancejessica@gmail.com" className="btn-primary">
               Email us
             </a>
             <Link href="/for-schools" className="btn-secondary">

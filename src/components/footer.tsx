@@ -16,8 +16,8 @@ export function Footer() {
               <span className="text-gradient-animated">dance</span>
             </Link>
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/50">
-              Helping children aged 2 to 6 grow in confidence, creativity, and
-              self expression through dance, singing, and movement.
+              Helping primary-school children grow in confidence, creativity and
+              self-expression through singing, acting and dance.
             </p>
             {/* Social placeholder */}
             <div className="mt-6 flex gap-3">
