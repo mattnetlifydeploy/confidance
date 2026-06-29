@@ -18,7 +18,7 @@ export function FaqAccordion({ faqs }: { faqs: Faq[] }) {
           <div
             key={i}
             className={`card-glow overflow-hidden rounded-2xl border transition-all duration-300 ${
-              isOpen ? 'border-coral/20 bg-white shadow-md' : 'border-border bg-cream hover:border-coral/10'
+              isOpen ? 'border-teal/20 bg-white shadow-md' : 'border-border bg-cream hover:border-teal/10'
             }`}
           >
             <button
@@ -31,8 +31,8 @@ export function FaqAccordion({ faqs }: { faqs: Faq[] }) {
               <span
                 className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
                   isOpen
-                    ? 'rotate-45 bg-coral text-white shadow-md'
-                    : 'bg-coral/10 text-coral'
+                    ? 'rotate-45 bg-teal text-white shadow-md'
+                    : 'bg-teal/10 text-teal'
                 }`}
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
