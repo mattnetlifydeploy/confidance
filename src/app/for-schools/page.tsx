@@ -115,7 +115,7 @@ export default function ForSchoolsPage() {
           <div className="grid items-center gap-12 md:grid-cols-2 md:gap-16">
             <div className="reveal-left order-2 md:order-1">
               <div className="img-glow overflow-hidden rounded-3xl shadow-xl">
-                <Image src="/images/about-jess.jpg" alt="Jessica, founder of Confidance" width={640} height={760} className="h-full w-full object-cover" />
+                <Image src="/images/jessica-headshot.jpg" alt="Jessica, founder of Confidance" width={640} height={760} className="h-full w-full object-cover" />
               </div>
             </div>
             <div className="order-1 md:order-2">

@@ -214,8 +214,8 @@ export default function Home() {
             <div className="reveal-left order-2 md:order-1">
               <div className="img-glow overflow-hidden rounded-3xl shadow-xl">
                 <Image
-                  src="/images/about-jess.jpg"
-                  alt="Jessica, founder of Confidance, leading a performing arts club"
+                  src="/images/jessica-headshot.jpg"
+                  alt="Jessica, founder of Confidance"
                   width={640}
                   height={760}
                   className="h-full w-full object-cover"

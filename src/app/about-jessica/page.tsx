@@ -98,8 +98,8 @@ export default function AboutJessicaPage() {
             <div className="reveal-left">
               <div className="img-glow overflow-hidden rounded-3xl shadow-xl">
                 <Image
-                  src="/images/about-jess.jpg"
-                  alt="Jessica teaching a performing arts class"
+                  src="/images/children-dancing.jpg"
+                  alt="Children taking part in a Confidance performing arts class"
                   width={640}
                   height={760}
                   className="h-full w-full object-cover"
