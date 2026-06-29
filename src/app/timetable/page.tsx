@@ -7,6 +7,13 @@ export const metadata: Metadata = {
   description: 'Find Confidance performing arts classes at Grove Neighbourhood Centre. View class times and age groups.',
 }
 
+const formatTermDate = (iso: string) =>
+  new Date(`${iso}T00:00:00`).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+
 export default function TimetablePage() {
   return (
     <>
@@ -26,7 +33,7 @@ export default function TimetablePage() {
               Performing arts classes <span className="font-script font-600 text-teal">this term</span>
             </h1>
             <p className="reveal mt-6 max-w-xl font-body text-lg text-charcoal-light">
-              Classes run after school during term time. Book for the full term or try a single session first. {TERM_LABEL} runs {CURRENT_TERM.startDate} to {CURRENT_TERM.endDate}.
+              Classes run after school during term time. Book for the full term or try a single session first. {TERM_LABEL} runs {formatTermDate(CURRENT_TERM.startDate)} to {formatTermDate(CURRENT_TERM.endDate)}.
             </p>
           </div>
         </div>
