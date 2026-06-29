@@ -74,9 +74,41 @@ export default function ForSchoolsPage() {
             </div>
             <div className="reveal-scale relative">
               <div className="img-glow overflow-hidden rounded-3xl border border-white/10 shadow-2xl">
-                <Image src="/images/kids-dance-studio.jpg" alt="Children taking part in a performing arts club" width={720} height={820} className="h-full w-full object-cover" priority />
+                <Image src="/images/kids-singing.jpg" alt="A group of happy young children singing together in a bright classroom" width={720} height={820} className="h-full w-full object-cover" priority />
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ SCHOOLS DON'T LIFT A FINGER ═══ */}
+      <section className="section-padding relative bg-pale-light">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="reveal font-heading text-sm font-600 uppercase tracking-[0.2em] text-teal">Zero admin for staff</p>
+            <h2 className="reveal mt-3 font-heading text-3xl font-bold text-navy md:text-4xl">
+              We handle every booking and admin task directly
+            </h2>
+            <p className="reveal mx-auto mt-4 max-w-xl font-body text-lg text-charcoal-light">
+              Schools don’t lift a finger. No registers, no payment chasing, no parent comms.
+            </p>
+          </div>
+          <div className="mt-12 grid gap-6 sm:grid-cols-3">
+            {[
+              { title: 'No registers', desc: 'We manage sign-ups, attendance and waiting lists for every club.', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
+              { title: 'No payment chasing', desc: 'Families book and pay Confidance directly. Nothing touches your finance office.', icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z' },
+              { title: 'No parent comms', desc: 'All confirmations, reminders and questions come through us, not your staff.', icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z' },
+            ].map((item, i) => (
+              <div key={item.title} className={`reveal stagger-${i + 1} card-glow rounded-3xl border border-teal-border bg-white p-7 text-center`}>
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-teal/15 text-teal">
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.7}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
+                  </svg>
+                </div>
+                <h3 className="mt-5 font-heading text-lg font-700 text-navy">{item.title}</h3>
+                <p className="mt-2 font-body text-sm leading-relaxed text-charcoal-light">{item.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
