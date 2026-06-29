@@ -207,9 +207,14 @@ export default function DashboardPage() {
             </h1>
             <p className="mt-1 text-charcoal-light">{profile?.email}</p>
           </div>
-          <button onClick={signOut} className="btn-secondary text-sm">
-            Sign Out
-          </button>
+          <div className="flex gap-2 sm:flex-row">
+            <Link href="/account" className="btn-secondary text-sm">
+              Account
+            </Link>
+            <button onClick={signOut} className="btn-secondary text-sm">
+              Sign Out
+            </button>
+          </div>
         </div>
 
         {/* Banners */}
