@@ -10,7 +10,13 @@ import { bookingSchema, type BookingFormData } from '@/lib/booking-schema'
 import { renderMarkdown } from '@/lib/markdown'
 import { getSupabase } from '@/lib/supabase'
 
-export function BookingForm() {
+export function BookingForm({
+  schools = [],
+  defaultSchoolId = null,
+}: {
+  schools?: { id: string; name: string }[]
+  defaultSchoolId?: string | null
+} = {}) {
   const { user, profile, children, refreshChildren } = useAuth()
   const [step, setStep] = useState(1)
   const [submitted, setSubmitted] = useState(false)
@@ -27,6 +33,7 @@ export function BookingForm() {
   const [signingWaiver, setSigningWaiver] = useState(false)
 
   const [form, setForm] = useState({
+    schoolId: defaultSchoolId ?? '',
     classType: '' as 'baby-boogie' | 'confidance-kids' | '',
     bookingType: '' as 'free-trial' | 'single-session' | 'term-pass' | '',
     sessionDate: '',
@@ -315,6 +322,7 @@ export function BookingForm() {
           bookingId,
           bookingType: form.bookingType,
           classType: form.classType,
+          schoolId: form.schoolId || undefined,
           sessionDate: form.sessionDate || undefined,
           childId: childIdToUse,
           childName: selectedChild?.name || form.childName,
@@ -487,6 +495,25 @@ export function BookingForm() {
       {/* Step 1: Class Selection */}
       {step === 1 && (
         <div className="space-y-6">
+          {schools.length > 0 && (
+            <div>
+              <label className="font-heading text-sm font-700">School / venue</label>
+              <select
+                value={form.schoolId}
+                onChange={(e) => update('schoolId', e.target.value)}
+                className="auth-input mt-3"
+              >
+                {schools.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-xs text-warm-gray">
+                Choose where your child attends. More schools are added each term.
+              </p>
+            </div>
+          )}
           <div>
             <label className="font-heading text-sm font-700">Class type</label>
             {errors.classType && <p className="mt-1 text-xs text-red-500">{errors.classType}</p>}

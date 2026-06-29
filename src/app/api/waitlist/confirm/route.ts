@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { verifyWaitlistToken } from '@/lib/waitlist'
 import { checkCapacity, type CapacitySlot } from '@/lib/capacity'
+import { getDefaultSchoolId } from '@/lib/schools'
 
 const supabaseAdmin = createClient(
   process.env.SUPABASE_URL || '',
@@ -97,6 +98,7 @@ export async function GET(req: NextRequest) {
         emergency_contact: '',
         emergency_phone: '',
         location: 'Grove Neighbourhood Centre, 7 Bradmore Park Road, Hammersmith, W6 0DT',
+        school_id: await getDefaultSchoolId(),
       })
 
     if (bookingError) {

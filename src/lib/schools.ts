@@ -61,6 +61,26 @@ export async function getSchoolById(id: string): Promise<School | null> {
   return (data as School | null) ?? null
 }
 
+// Fallback venue for bookings with no explicit school: prefer the seeded
+// Grove Neighbourhood Centre, else the first active school, else null.
+export async function getDefaultSchoolId(): Promise<string | null> {
+  const grove = await db()
+    .from('schools')
+    .select('id')
+    .eq('name', 'Grove Neighbourhood Centre')
+    .maybeSingle()
+  if (grove.data) return (grove.data as { id: string }).id
+
+  const firstActive = await db()
+    .from('schools')
+    .select('id')
+    .eq('active', true)
+    .order('name', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+  return (firstActive.data as { id: string } | null)?.id ?? null
+}
+
 export type SchoolInput = {
   name: string
   slug: string

@@ -5,6 +5,7 @@ import { PRICING, getRemainingSessionCount, VENUE, getNextTerm, getFullTermSessi
 import { computeTermPassPrice } from '@/lib/pricing'
 import { sendBookingConfirmation } from '@/lib/email-booking-confirmation'
 import { isClassFull } from '@/lib/capacity'
+import { getDefaultSchoolId } from '@/lib/schools'
 
 const supabaseAdmin = createClient(
   process.env.SUPABASE_URL || '',
@@ -52,6 +53,7 @@ export async function POST(req: NextRequest) {
     emergencyContact,
     emergencyPhone,
     selectedTerm,
+    schoolId,
   } = body
 
   if (!bookingId || !bookingType || !classType || !childId) {
@@ -60,6 +62,10 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     )
   }
+
+  // Resolve the venue: explicit school selection, else fall back to Grove.
+  const resolvedSchoolId =
+    typeof schoolId === 'string' && schoolId ? schoolId : await getDefaultSchoolId()
 
   const className = classType === 'baby-boogie' ? 'Baby Boogie' : 'Confidance Kids'
 
@@ -99,6 +105,7 @@ export async function POST(req: NextRequest) {
           status: 'confirmed',
           term_name: getCurrentTerm().name,
           term_year: getCurrentTerm().year,
+          school_id: resolvedSchoolId,
         })
 
       if (bookingError) {
@@ -154,6 +161,7 @@ export async function POST(req: NextRequest) {
           term_name: getCurrentTerm().name,
           term_year: getCurrentTerm().year,
           session_date: sessionDate,
+          school_id: resolvedSchoolId,
         })
 
       if (bookingError) {
@@ -186,6 +194,7 @@ export async function POST(req: NextRequest) {
         metadata: {
           booking_id: bookingId,
           booking_type: 'single',
+          school_id: resolvedSchoolId ?? '',
         },
         success_url: `${req.nextUrl.origin}/booking-success?type=single&child=${encodeURIComponent(childName)}&class=${encodeURIComponent(className)}&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${req.nextUrl.origin}/book?cancelled=true`,
@@ -242,6 +251,7 @@ export async function POST(req: NextRequest) {
           term_name: targetTerm.name,
           term_year: targetTerm.year,
           sibling_discount_pct: discountPct,
+          school_id: resolvedSchoolId,
         })
 
       if (bookingError) {

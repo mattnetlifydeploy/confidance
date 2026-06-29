@@ -83,12 +83,18 @@ export async function POST(req: NextRequest) {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session
     const bookingId = session.metadata?.booking_id
+    const schoolId = session.metadata?.school_id
 
     if (bookingId) {
-      // Update booking status and store stripe_session_id for invoice retrieval
+      // Update booking status and store stripe_session_id for invoice retrieval.
+      // Also persist the venue from checkout metadata when present.
       await supabaseAdmin
         .from('bookings')
-        .update({ status: 'confirmed', stripe_session_id: session.id })
+        .update({
+          status: 'confirmed',
+          stripe_session_id: session.id,
+          ...(schoolId ? { school_id: schoolId } : {}),
+        })
         .eq('id', bookingId)
 
       // Send the booking confirmation email for paid single/term bookings.
