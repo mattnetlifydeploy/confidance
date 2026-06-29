@@ -395,10 +395,10 @@ export function BookingForm({
         <p className="mt-4 text-charcoal-light">
           You're number {waitlistPosition} on the waitlist for {form.classType === 'baby-boogie' ? 'Baby Boogie' : 'Confidance Kids'}.
         </p>
-        <p className="mt-2 text-sm text-warm-gray">
+        <p className="mt-2 text-sm text-charcoal-light">
           We'll email you if a space opens.
         </p>
-        <p className="mt-6 text-sm text-warm-gray">
+        <p className="mt-6 text-sm text-charcoal-light">
           Questions? Email confidancejessica@gmail.com
         </p>
       </div>
@@ -418,7 +418,7 @@ export function BookingForm({
           Thanks, {profile?.full_name?.split(' ')[0]}! We&apos;ve received your booking
           for {selectedChild?.name || form.childName}. You&apos;ll receive a confirmation email shortly.
         </p>
-        <p className="mt-6 text-sm text-warm-gray">
+        <p className="mt-6 text-sm text-charcoal-light">
           Questions? Email confidancejessica@gmail.com
         </p>
       </div>
@@ -466,8 +466,8 @@ export function BookingForm({
                 step > i + 1
                   ? 'bg-green-100 text-green-600'
                   : step === i + 1
-                    ? 'bg-gradient-to-br from-coral to-coral-dark text-white shadow-md'
-                    : 'bg-cream text-warm-gray'
+                    ? 'bg-gradient-to-br from-teal to-teal-dark text-white shadow-md'
+                    : 'bg-cream text-charcoal-light'
               }`}
             >
               {step > i + 1 ? (
@@ -509,7 +509,7 @@ export function BookingForm({
                   </option>
                 ))}
               </select>
-              <p className="mt-2 text-xs text-warm-gray">
+              <p className="mt-2 text-xs text-charcoal-light">
                 Choose where your child attends. More schools are added each term.
               </p>
             </div>
@@ -527,12 +527,12 @@ export function BookingForm({
                   onClick={() => update('classType', opt.value)}
                   className={`rounded-2xl border-2 p-5 text-left transition-all duration-200 ${
                     form.classType === opt.value
-                      ? 'border-coral bg-coral/5 shadow-sm'
-                      : 'border-border hover:border-coral/30'
+                      ? 'border-teal bg-teal/5 shadow-sm'
+                      : 'border-border hover:border-teal/30'
                   }`}
                 >
                   <span className="font-heading text-sm font-700">{opt.label}</span>
-                  <p className="mt-1 text-xs text-warm-gray">{opt.ages}</p>
+                  <p className="mt-1 text-xs text-charcoal-light">{opt.ages}</p>
                 </button>
               ))}
             </div>
@@ -565,16 +565,16 @@ export function BookingForm({
                   disabled={opt.value === 'free-trial' && trialUsed}
                   className={`rounded-2xl border-2 p-5 text-left transition-all duration-200 ${
                     form.bookingType === opt.value
-                      ? 'border-coral bg-coral/5 shadow-sm'
-                      : 'border-border hover:border-coral/30'
+                      ? 'border-teal bg-teal/5 shadow-sm'
+                      : 'border-border hover:border-teal/30'
                   } ${opt.value === 'free-trial' && trialUsed ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <div className="flex items-start justify-between">
                     <div>
                       <span className="font-heading text-sm font-700">{opt.label}</span>
-                      <p className="mt-1 text-xs text-warm-gray">{opt.desc}</p>
+                      <p className="mt-1 text-xs text-charcoal-light">{opt.desc}</p>
                     </div>
-                    <span className="font-heading text-sm font-700 text-coral">{opt.price}</span>
+                    <span className="font-heading text-sm font-700 text-teal">{opt.price}</span>
                   </div>
                 </button>
               ))}
@@ -616,8 +616,8 @@ export function BookingForm({
                 onClick={() => update('selectedTerm', 'current')}
                 className={`w-full rounded-2xl border-2 p-5 text-left transition-all duration-200 ${
                   form.selectedTerm === 'current'
-                    ? 'border-coral bg-coral/5 shadow-sm'
-                    : 'border-border hover:border-coral/30'
+                    ? 'border-teal bg-teal/5 shadow-sm'
+                    : 'border-border hover:border-teal/30'
                 }`}
               >
                 <div className="flex items-start justify-between">
@@ -625,16 +625,16 @@ export function BookingForm({
                     <span className="font-heading text-sm font-700">
                       {CURRENT_TERM.name} Term {CURRENT_TERM.year} (Remaining)
                     </span>
-                    <p className="mt-1 text-xs text-warm-gray">
+                    <p className="mt-1 text-xs text-charcoal-light">
                       {currentTermRemaining} session{currentTermRemaining !== 1 ? 's' : ''} left at {formatPrice(PRICING.term_session_price)} each
                     </p>
                     {hasExistingTermBooking && (
-                      <p className="mt-2 text-xs font-600 text-coral">
+                      <p className="mt-2 text-xs font-600 text-teal">
                         Sibling discount: {SIBLING_DISCOUNT_PCT}% off, applied at checkout
                       </p>
                     )}
                   </div>
-                  <span className="font-heading text-sm font-700 text-coral">
+                  <span className="font-heading text-sm font-700 text-teal">
                     {formatPrice(currentTermRemaining * PRICING.term_session_price)}
                   </span>
                 </div>
@@ -655,8 +655,8 @@ export function BookingForm({
                   onClick={() => update('selectedTerm', 'next')}
                   className={`w-full rounded-2xl border-2 p-5 text-left transition-all duration-200 ${
                     form.selectedTerm === 'next'
-                      ? 'border-coral bg-coral/5 shadow-sm'
-                      : 'border-border hover:border-coral/30'
+                      ? 'border-teal bg-teal/5 shadow-sm'
+                      : 'border-border hover:border-teal/30'
                   }`}
                 >
                   <div className="flex items-start justify-between">
@@ -664,11 +664,11 @@ export function BookingForm({
                       <span className="font-heading text-sm font-700">
                         {nextTerm.name} Term {nextTerm.year} (Full Term)
                       </span>
-                      <p className="mt-1 text-xs text-warm-gray">
+                      <p className="mt-1 text-xs text-charcoal-light">
                         {nextTermTotal} sessions at {formatPrice(PRICING.term_session_price)} each
                       </p>
                     </div>
-                    <span className="font-heading text-sm font-700 text-coral">
+                    <span className="font-heading text-sm font-700 text-teal">
                       {formatPrice(nextTermTotal * PRICING.term_session_price)}
                     </span>
                   </div>
@@ -727,19 +727,19 @@ export function BookingForm({
                     }}
                     className={`flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
                       form.childId === child.id
-                        ? 'border-coral bg-coral/5 shadow-sm'
-                        : 'border-border hover:border-coral/30'
+                        ? 'border-teal bg-teal/5 shadow-sm'
+                        : 'border-border hover:border-teal/30'
                     }`}
                   >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-coral/20 to-lilac/20 font-heading text-sm font-bold text-coral">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-teal/20 to-navy/20 font-heading text-sm font-bold text-teal">
                       {child.name[0]}
                     </div>
                     <div className="flex-1">
                       <p className="font-heading text-sm font-700">{child.name}</p>
-                      <p className="text-xs text-warm-gray">Age {child.age}</p>
+                      <p className="text-xs text-charcoal-light">Age {child.age}</p>
                     </div>
                     {form.childId === child.id && (
-                      <svg className="h-5 w-5 text-coral" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <svg className="h-5 w-5 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     )}
@@ -767,7 +767,7 @@ export function BookingForm({
             {!showAddChild && children.length > 0 && (
               <button
                 onClick={() => setShowAddChild(true)}
-                className="mt-4 font-heading text-sm font-600 text-coral transition-colors hover:text-coral-dark"
+                className="mt-4 font-heading text-sm font-600 text-teal transition-colors hover:text-teal-dark"
               >
                 + Add another child
               </button>
@@ -896,7 +896,7 @@ export function BookingForm({
                 />
               )}
               <div className="border-t border-border pt-3">
-                <p className="font-heading text-xs font-700 text-warm-gray uppercase tracking-wide">{VENUE.name}</p>
+                <p className="font-heading text-xs font-700 text-charcoal-light uppercase tracking-wide">{VENUE.name}</p>
                 <p className="mt-1 text-xs text-charcoal-light">{VENUE.address}</p>
               </div>
               <SummaryRow
@@ -977,7 +977,7 @@ export function BookingForm({
                     }
                   }}
                   disabled={signingWaiver || signatureText.trim().length < 2}
-                  className="w-full rounded-lg bg-coral px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                  className="w-full rounded-lg bg-teal px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
                 >
                   {signingWaiver ? 'Signing...' : 'Sign Waiver'}
                 </button>
@@ -991,11 +991,11 @@ export function BookingForm({
               type="checkbox"
               checked={form.agreedToTerms}
               onChange={(e) => update('agreedToTerms', e.target.checked)}
-              className="mt-1 h-4 w-4 rounded border-border accent-coral"
+              className="mt-1 h-4 w-4 rounded border-border accent-teal"
             />
             <span className="text-sm text-charcoal-light">
               I confirm the information above is correct and agree to Confidance&apos;s{' '}
-              <Link href="/terms" className="text-coral font-600 hover:text-coral-dark">
+              <Link href="/terms" className="text-teal font-600 hover:text-teal-dark">
                 terms and conditions
               </Link>
               . I understand that payment is required to secure
@@ -1030,8 +1030,8 @@ export function BookingForm({
 function SummaryRow({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
     <div className={`flex justify-between pb-3 ${highlight ? 'pt-1 border-t border-border' : 'border-b border-border'}`}>
-      <dt className={highlight ? 'font-heading font-700 text-charcoal' : 'text-warm-gray'}>{label}</dt>
-      <dd className={highlight ? 'font-heading text-lg font-700 text-coral' : 'font-600 text-charcoal'}>{value}</dd>
+      <dt className={highlight ? 'font-heading font-700 text-charcoal' : 'text-charcoal-light'}>{label}</dt>
+      <dd className={highlight ? 'font-heading text-lg font-700 text-teal' : 'font-600 text-charcoal'}>{value}</dd>
     </div>
   )
 }
