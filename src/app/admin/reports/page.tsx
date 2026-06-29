@@ -3,6 +3,7 @@ import { CLASSES, TERMS, type TermDef } from '@/lib/constants'
 import type { Database, Booking, Attendance } from '@/lib/database.types'
 import type { ClassType } from '@/lib/constants'
 import { formatPence, formatRefundRow } from '@/lib/refund-formatter'
+import { ExportCsvButton } from '@/components/export-csv-button'
 
 export const dynamic = 'force-dynamic'
 
@@ -328,7 +329,24 @@ export default async function ReportsPage() {
       </div>
 
       <section className="rounded-3xl bg-white p-6 shadow-sm card-glow">
-        <h3 className="font-heading text-lg font-bold">Revenue by term</h3>
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+          <h3 className="font-heading text-lg font-bold">Revenue by term</h3>
+          {revenue.length > 0 && (
+            <ExportCsvButton
+              label="Export CSV"
+              filename="confidance-revenue-all-terms.csv"
+              headers={['Term', 'Class Type', 'Bookings', 'Revenue']}
+              rows={revenue.flatMap((g) =>
+                g.rows.map((r) => [
+                  termLabel(g.termName, g.termYear),
+                  classLabel(r.classType),
+                  String(r.bookings),
+                  String(r.pence),
+                ])
+              )}
+            />
+          )}
+        </div>
         <p className="mt-1 text-sm text-warm-gray">Sum of amount paid on confirmed bookings.</p>
         {revenue.length === 0 ? (
           <p className="mt-4 text-sm text-warm-gray italic">No revenue recorded yet.</p>
@@ -359,7 +377,23 @@ export default async function ReportsPage() {
       </section>
 
       <section className="rounded-3xl bg-white p-6 shadow-sm card-glow">
-        <h3 className="font-heading text-lg font-bold">Attendance by term</h3>
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+          <h3 className="font-heading text-lg font-bold">Attendance by term</h3>
+          {attendance.length > 0 && (
+            <ExportCsvButton
+              label="Export CSV"
+              filename="confidance-attendance-all-terms.csv"
+              headers={['Term', 'Class Type', 'Check-ins']}
+              rows={attendance.flatMap((g) =>
+                g.rows.map((r) => [
+                  termLabel(g.termName, g.termYear),
+                  classLabel(r.classType),
+                  String(r.count),
+                ])
+              )}
+            />
+          )}
+        </div>
         <p className="mt-1 text-sm text-warm-gray">
           Check-ins grouped by term (derived from session date) and class.
         </p>
@@ -390,7 +424,23 @@ export default async function ReportsPage() {
       </section>
 
       <section className="rounded-3xl bg-white p-6 shadow-sm card-glow">
-        <h3 className="font-heading text-lg font-bold">Term fill</h3>
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+          <h3 className="font-heading text-lg font-bold">Term fill</h3>
+          {fill.length > 0 && (
+            <ExportCsvButton
+              label="Export CSV"
+              filename="confidance-termfill-all-terms.csv"
+              headers={['Term', 'Class Type', 'Bookings']}
+              rows={fill.flatMap((g) =>
+                g.rows.map((r) => [
+                  termLabel(g.termName, g.termYear),
+                  classLabel(r.classType),
+                  String(r.count),
+                ])
+              )}
+            />
+          )}
+        </div>
         <p className="mt-1 text-sm text-warm-gray">
           Confirmed bookings per class per term. Raw counts (no capacity ratio yet).
         </p>
@@ -421,7 +471,26 @@ export default async function ReportsPage() {
       </section>
 
       <section className="rounded-3xl bg-white p-6 shadow-sm card-glow">
-        <h3 className="font-heading text-lg font-bold">Refunds</h3>
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+          <h3 className="font-heading text-lg font-bold">Refunds</h3>
+          {refunds.length > 0 && (
+            <ExportCsvButton
+              label="Export CSV"
+              filename="confidance-refunds.csv"
+              headers={['Date', 'Parent Name', 'Parent Email', 'Child Name', 'Original Amount', 'Refund Amount', 'Reason', 'Processed By']}
+              rows={refunds.map((r) => [
+                new Date(r.date).toLocaleDateString('en-GB'),
+                r.parentName,
+                r.parentEmail,
+                r.childName,
+                String(r.originalAmountPence),
+                String(r.refundAmountPence),
+                r.reason,
+                r.processedBy,
+              ])}
+            />
+          )}
+        </div>
         <p className="mt-1 text-sm text-warm-gray">
           Processed refunds from session cancellations.
         </p>
