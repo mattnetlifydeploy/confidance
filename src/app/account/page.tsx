@@ -8,7 +8,7 @@ import { getSupabase } from '@/lib/supabase'
 import { AnimatedBubbles } from '@/components/animated-bubbles'
 
 export default function AccountPage() {
-  const { user, profile, loading } = useAuth()
+  const { user, profile, loading, signOut } = useAuth()
   const router = useRouter()
 
   const [emailValue, setEmailValue] = useState('')
@@ -26,6 +26,15 @@ export default function AccountPage() {
   const [phoneError, setPhoneError] = useState('')
   const [phoneSuccess, setPhoneSuccess] = useState('')
   const [phoneSaving, setPhoneSaving] = useState(false)
+
+  const [exportLoading, setExportLoading] = useState(false)
+  const [exportError, setExportError] = useState('')
+  const [exportSuccess, setExportSuccess] = useState('')
+
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+  const [deleteConfirmEmail, setDeleteConfirmEmail] = useState('')
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
 
   useEffect(() => {
     if (user && profile) {
@@ -153,6 +162,94 @@ export default function AccountPage() {
       setPhoneError(err instanceof Error ? err.message : 'Failed to update phone')
     } finally {
       setPhoneSaving(false)
+    }
+  }
+
+  const handleExportData = async () => {
+    setExportError('')
+    setExportSuccess('')
+    setExportLoading(true)
+
+    try {
+      const supabase = getSupabase()
+      const { data: { session } } = await supabase.auth.getSession()
+
+      if (!session?.access_token) {
+        setExportError('Not authenticated')
+        return
+      }
+
+      const res = await fetch('/api/account/export', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        setExportError(data.error || 'Failed to export data')
+        return
+      }
+
+      const data = await res.json()
+
+      // Trigger download
+      const jsonStr = JSON.stringify(data, null, 2)
+      const blob = new Blob([jsonStr], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `confidance-my-data-${new Date().toISOString().split('T')[0]}.json`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+
+      setExportSuccess('Your data has been exported and downloaded. You should also receive an email with your data.')
+    } catch (err) {
+      setExportError(err instanceof Error ? err.message : 'Failed to export data')
+    } finally {
+      setExportLoading(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    setDeleteError('')
+    setDeleteLoading(true)
+
+    try {
+      const supabase = getSupabase()
+      const { data: { session } } = await supabase.auth.getSession()
+
+      if (!session?.access_token) {
+        setDeleteError('Not authenticated')
+        return
+      }
+
+      const res = await fetch('/api/account/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ email: deleteConfirmEmail }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        setDeleteError(data.error || 'Failed to delete account')
+        return
+      }
+
+      // Sign out and redirect
+      setDeleteConfirmOpen(false)
+      await signOut()
+      router.push('/')
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Failed to delete account')
+    } finally {
+      setDeleteLoading(false)
     }
   }
 
@@ -299,6 +396,97 @@ export default function AccountPage() {
             </button>
           </form>
         </div>
+      </div>
+
+      {/* Export Data Section */}
+      <div className="reveal mt-8 rounded-3xl bg-white p-8 shadow-sm card-glow">
+        <h2 className="font-heading text-xl font-bold">Export my data</h2>
+        <p className="mt-1 text-sm text-warm-gray">Download a copy of all your Confidance data including your profile, children, bookings, and attendance records.</p>
+
+        <div className="mt-6">
+          {exportError && (
+            <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-600 mb-4">
+              {exportError}
+            </div>
+          )}
+          {exportSuccess && (
+            <div className="rounded-xl bg-green-50 border border-green-200 p-3 text-sm text-green-600 mb-4">
+              {exportSuccess}
+            </div>
+          )}
+
+          <button
+            onClick={handleExportData}
+            disabled={exportLoading}
+            className="btn-primary w-full text-sm disabled:opacity-50"
+          >
+            {exportLoading ? 'Exporting...' : 'Export my data'}
+          </button>
+        </div>
+      </div>
+
+      {/* Delete Account Section */}
+      <div className="reveal mt-8 rounded-3xl bg-white p-8 shadow-sm card-glow border border-red-200">
+        <h2 className="font-heading text-xl font-bold text-red-600">Delete my account</h2>
+        <p className="mt-1 text-sm text-warm-gray">Permanently delete your account and all associated data. This action cannot be undone.</p>
+
+        <div className="mt-6">
+          <button
+            onClick={() => setDeleteConfirmOpen(true)}
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors disabled:opacity-50"
+            disabled={deleteLoading}
+          >
+            Delete my account
+          </button>
+        </div>
+
+        {deleteConfirmOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-3xl p-8 max-w-md w-full mx-4 shadow-lg">
+              <h3 className="font-heading text-lg font-bold mb-4">Confirm account deletion</h3>
+
+              <p className="text-sm text-warm-gray mb-4">
+                This will permanently delete your account, cancel any active bookings, and anonymise all your data. This cannot be undone.
+              </p>
+
+              {deleteError && (
+                <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-600 mb-4">
+                  {deleteError}
+                </div>
+              )}
+
+              <p className="text-sm font-semibold mb-3">Type your email to confirm:</p>
+              <input
+                type="email"
+                value={deleteConfirmEmail}
+                onChange={(e) => setDeleteConfirmEmail(e.target.value)}
+                placeholder={user?.email || 'your.email@example.com'}
+                className="auth-input w-full mb-4"
+              />
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setDeleteConfirmOpen(false)
+                    setDeleteConfirmEmail('')
+                    setDeleteError('')
+                  }}
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg transition-colors"
+                  disabled={deleteLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={deleteLoading || deleteConfirmEmail !== (user?.email || '')}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {deleteLoading ? 'Deleting...' : 'Delete permanently'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   )
