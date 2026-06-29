@@ -1,13 +1,16 @@
 import { describe, it, expect } from 'vitest'
 import { selectRemindersForDate, formatReminderEmail, type ReminderBooking } from './booking-reminders'
 
+// Helper for tests: return empty exclusions list (no DB lookup)
+const noExclusionsCache = async () => []
+
 describe('selectRemindersForDate', () => {
-  it('returns empty array when bookings empty', () => {
-    const result = selectRemindersForDate('2026-04-16', [])
+  it('returns empty array when bookings empty', async () => {
+    const result = await selectRemindersForDate('2026-04-16', [], noExclusionsCache)
     expect(result).toEqual([])
   })
 
-  it('excludes non-confirmed bookings', () => {
+  it('excludes non-confirmed bookings', async () => {
     const bookings: ReminderBooking[] = [
       {
         id: 'b1',
@@ -20,11 +23,11 @@ describe('selectRemindersForDate', () => {
         child_id: 'c1',
       },
     ]
-    const result = selectRemindersForDate('2026-04-16', bookings)
+    const result = await selectRemindersForDate('2026-04-16', bookings, noExclusionsCache)
     expect(result).toHaveLength(0)
   })
 
-  it('includes confirmed term-pass booking on a session date', () => {
+  it('includes confirmed term-pass booking on a session date', async () => {
     const bookings: ReminderBooking[] = [
       {
         id: 'b1',
@@ -37,12 +40,12 @@ describe('selectRemindersForDate', () => {
         child_id: 'c1',
       },
     ]
-    const result = selectRemindersForDate('2026-04-16', bookings)
+    const result = await selectRemindersForDate('2026-04-16', bookings, noExclusionsCache)
     expect(result).toHaveLength(1)
     expect(result[0].id).toBe('b1')
   })
 
-  it('excludes term-pass booking on non-session date', () => {
+  it('excludes term-pass booking on non-session date', async () => {
     const bookings: ReminderBooking[] = [
       {
         id: 'b1',
@@ -55,11 +58,11 @@ describe('selectRemindersForDate', () => {
         child_id: 'c1',
       },
     ]
-    const result = selectRemindersForDate('2026-04-15', bookings)
+    const result = await selectRemindersForDate('2026-04-15', bookings, noExclusionsCache)
     expect(result).toHaveLength(0)
   })
 
-  it('excludes term-pass booking when targetDate outside term range', () => {
+  it('excludes term-pass booking when targetDate outside term range', async () => {
     const bookings: ReminderBooking[] = [
       {
         id: 'b1',
@@ -72,11 +75,11 @@ describe('selectRemindersForDate', () => {
         child_id: 'c1',
       },
     ]
-    const result = selectRemindersForDate('2026-08-01', bookings)
+    const result = await selectRemindersForDate('2026-08-01', bookings, noExclusionsCache)
     expect(result).toHaveLength(0)
   })
 
-  it('excludes single-session bookings (not supported)', () => {
+  it('excludes single-session bookings (not supported)', async () => {
     const bookings: ReminderBooking[] = [
       {
         id: 'b1',
@@ -89,11 +92,11 @@ describe('selectRemindersForDate', () => {
         child_id: 'c1',
       },
     ]
-    const result = selectRemindersForDate('2026-04-16', bookings)
+    const result = await selectRemindersForDate('2026-04-16', bookings, noExclusionsCache)
     expect(result).toHaveLength(0)
   })
 
-  it('excludes bookings missing term_name', () => {
+  it('excludes bookings missing term_name', async () => {
     const bookings: ReminderBooking[] = [
       {
         id: 'b1',
@@ -106,11 +109,11 @@ describe('selectRemindersForDate', () => {
         child_id: 'c1',
       },
     ]
-    const result = selectRemindersForDate('2026-04-16', bookings)
+    const result = await selectRemindersForDate('2026-04-16', bookings, noExclusionsCache)
     expect(result).toHaveLength(0)
   })
 
-  it('excludes bookings missing term_year', () => {
+  it('excludes bookings missing term_year', async () => {
     const bookings: ReminderBooking[] = [
       {
         id: 'b1',
@@ -123,11 +126,11 @@ describe('selectRemindersForDate', () => {
         child_id: 'c1',
       },
     ]
-    const result = selectRemindersForDate('2026-04-16', bookings)
+    const result = await selectRemindersForDate('2026-04-16', bookings, noExclusionsCache)
     expect(result).toHaveLength(0)
   })
 
-  it('includes trial bookings on session dates (treated as term-pass)', () => {
+  it('includes trial bookings on session dates (treated as term-pass)', async () => {
     const bookings: ReminderBooking[] = [
       {
         id: 'b1',
@@ -140,11 +143,11 @@ describe('selectRemindersForDate', () => {
         child_id: 'c1',
       },
     ]
-    const result = selectRemindersForDate('2026-04-16', bookings)
+    const result = await selectRemindersForDate('2026-04-16', bookings, noExclusionsCache)
     expect(result).toHaveLength(1)
   })
 
-  it('handles multiple bookings with mixed types', () => {
+  it('handles multiple bookings with mixed types', async () => {
     const bookings: ReminderBooking[] = [
       {
         id: 'b1',
@@ -187,12 +190,12 @@ describe('selectRemindersForDate', () => {
         child_id: 'c4',
       },
     ]
-    const result = selectRemindersForDate('2026-04-16', bookings)
+    const result = await selectRemindersForDate('2026-04-16', bookings, noExclusionsCache)
     expect(result).toHaveLength(2)
     expect(result.map((b) => b.id).sort()).toEqual(['b1', 'b4'])
   })
 
-  it('includes different term sessions for same booking type', () => {
+  it('includes different term sessions for same booking type', async () => {
     const bookings: ReminderBooking[] = [
       {
         id: 'b1',
@@ -206,10 +209,10 @@ describe('selectRemindersForDate', () => {
       },
     ]
     const sessionDates = ['2026-04-16', '2026-04-23', '2026-04-30', '2026-05-07']
-    sessionDates.forEach((date) => {
-      const result = selectRemindersForDate(date, bookings)
+    for (const date of sessionDates) {
+      const result = await selectRemindersForDate(date, bookings, noExclusionsCache)
       expect(result.length).toBe(1)
-    })
+    }
   })
 })
 

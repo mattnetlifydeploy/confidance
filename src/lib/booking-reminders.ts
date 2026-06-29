@@ -1,4 +1,5 @@
-import { CLASSES, VENUE, TERMS, getTermSessionDates, type ClassType, type TermDef } from './constants'
+import { CLASSES, VENUE, TERMS, type ClassType, type TermDef } from './constants'
+import { getTermSessions } from './term-sessions'
 
 export type ReminderBooking = {
   id: string
@@ -30,41 +31,46 @@ export type ReminderCandidate = {
  *
  * Inclusion rules:
  * - status must be 'confirmed'
- * - For TERM-PASS bookings: targetDate must be one of the term's session dates
+ * - For TERM-PASS bookings: targetDate must be one of the term's session dates (excluding admin-managed exclusions)
  * - For SINGLE-SESSION bookings: NOT SUPPORTED (no session_date stored in DB; reminders skipped)
  * - For TRIAL bookings: treat like term-pass (targetDate matches term session dates)
  *
  * Note: Single-session bookings do not store session_date in the bookings table.
- * Future item #8 will add holiday exclusions via getTermSessions(). For now we use
- * getTermSessionDates(). Update this line when getTermSessions() replaces it.
+ * Now uses getTermSessions() which respects admin-managed holiday exclusions.
+ * For testing, pass an exclusionsFn to avoid DB lookups.
  */
-export function selectRemindersForDate(
+export async function selectRemindersForDate(
   targetDate: string,
   bookings: ReminderBooking[],
-): ReminderBooking[] {
+  exclusionsFn?: (termName: string, termYear: number) => Promise<string[]>,
+): Promise<ReminderBooking[]> {
   const confirmed = bookings.filter((b) => b.status === 'confirmed')
 
-  return confirmed.filter((booking) => {
-    if (booking.booking_type === 'single') {
-      return false
-    }
+  const filtered = await Promise.all(
+    confirmed.map(async (booking) => {
+      if (booking.booking_type === 'single') {
+        return null
+      }
 
-    if (!booking.term_name || booking.term_year === null) {
-      return false
-    }
+      if (!booking.term_name || booking.term_year === null) {
+        return null
+      }
 
-    const term = TERMS.find((t) => t.name === booking.term_name && t.year === booking.term_year)
-    if (!term) {
-      return false
-    }
+      const term = TERMS.find((t) => t.name === booking.term_name && t.year === booking.term_year)
+      if (!term) {
+        return null
+      }
 
-    try {
-      const sessionDates = getTermSessionDates(term)
-      return sessionDates.includes(targetDate)
-    } catch {
-      return false
-    }
-  })
+      try {
+        const sessionDates = await getTermSessions(term, undefined, exclusionsFn ? async () => await exclusionsFn(booking.term_name!, booking.term_year!) : undefined)
+        return sessionDates.includes(targetDate) ? booking : null
+      } catch {
+        return null
+      }
+    }),
+  )
+
+  return filtered.filter((b): b is ReminderBooking => b !== null)
 }
 
 /**

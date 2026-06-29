@@ -36,7 +36,7 @@ async function runJob(request: NextRequest) {
       )
     }
 
-    const candidates = selectRemindersForDate(targetDate, bookings as ReminderBooking[])
+    const candidates = await selectRemindersForDate(targetDate, bookings as ReminderBooking[], undefined)
 
     if (candidates.length === 0) {
       return NextResponse.json({ sent: 0, targetDate })

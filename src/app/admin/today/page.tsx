@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { getSupabase } from '@/lib/supabase'
-import { CLASSES, getCurrentTerm, getTermSessionDates } from '@/lib/constants'
+import { CLASSES, getCurrentTerm } from '@/lib/constants'
+import { getTermSessions } from '@/lib/term-sessions'
 import type { Booking, WalkIn } from '@/lib/database.types'
 
 type BookingWithChild = Booking & {
@@ -53,9 +54,11 @@ export default function TodayPage() {
     if (!todayIso) return
     const curTerm = getCurrentTerm()
     setTerm(curTerm)
-    const dates = getTermSessionDates(curTerm)
-    setSessionDates(dates)
-    setIsClassDay(dates.includes(todayIso))
+    ;(async () => {
+      const dates = await getTermSessions(curTerm)
+      setSessionDates(dates)
+      setIsClassDay(dates.includes(todayIso))
+    })()
   }, [todayIso])
 
   const loadData = useCallback(async () => {
