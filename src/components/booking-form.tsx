@@ -40,6 +40,11 @@ export function BookingForm() {
     selectedTerm: 'current' as 'current' | 'next',
   })
 
+  const [showWaitlistModal, setShowWaitlistModal] = useState(false)
+  const [waitlistPosition, setWaitlistPosition] = useState<number | null>(null)
+  const [joiningWaitlist, setJoiningWaitlist] = useState(false)
+  const [childIdForWaitlist, setChildIdForWaitlist] = useState('')
+
   // Auto-fill emergency contact from profile
   useEffect(() => {
     if (profile && !form.emergencyContact && !form.emergencyPhone) {
@@ -212,6 +217,44 @@ export function BookingForm() {
     setAddingChild(false)
   }
 
+  async function handleJoinWaitlist() {
+    if (!childIdForWaitlist || !user?.id) return
+
+    setJoiningWaitlist(true)
+    try {
+      const res = await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await getSupabase().auth.getSession()).data.session?.access_token || ''}`,
+        },
+        body: JSON.stringify({
+          child_id: childIdForWaitlist,
+          class_type: form.classType,
+          term_name: form.bookingType === 'term-pass' && form.selectedTerm === 'next' ? getNextTerm()?.name : CURRENT_TERM.name,
+          term_year: form.bookingType === 'term-pass' && form.selectedTerm === 'next' ? getNextTerm()?.year : CURRENT_TERM.year,
+          session_date: form.sessionDate || undefined,
+        }),
+      })
+
+      if (!res.ok) {
+        const err = await res.json()
+        setErrors({ submit: err.error || 'Failed to join waitlist' })
+        setShowWaitlistModal(false)
+        setJoiningWaitlist(false)
+        return
+      }
+
+      const data = await res.json()
+      setWaitlistPosition(data.position)
+      setJoiningWaitlist(false)
+    } catch (err) {
+      setErrors({ submit: 'Failed to join waitlist. Please try again.' })
+      setShowWaitlistModal(false)
+      setJoiningWaitlist(false)
+    }
+  }
+
   function validateStep(s: number): boolean {
     const stepErrors: Record<string, string> = {}
 
@@ -286,10 +329,8 @@ export function BookingForm() {
       const result = await res.json()
 
       if (res.status === 409) {
-        setErrors({
-          submit:
-            'This class is now full. To join the waitlist, email Jessica at confidancejessica@gmail.com.',
-        })
+        setChildIdForWaitlist(childIdToUse)
+        setShowWaitlistModal(true)
         setSaving(false)
         return
       }
@@ -334,6 +375,28 @@ export function BookingForm() {
   const termSessionCount = form.selectedTerm === 'next' && nextTerm ? nextTermTotal : currentTermRemaining
   const termPrice = termSessionCount * PRICING.term_session_price
 
+  if (waitlistPosition !== null) {
+    return (
+      <div className="text-center py-4">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
+          <svg className="h-8 w-8 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h2 className="mt-6 font-heading text-2xl font-bold">You're on the waitlist!</h2>
+        <p className="mt-4 text-charcoal-light">
+          You're number {waitlistPosition} on the waitlist for {form.classType === 'baby-boogie' ? 'Baby Boogie' : 'Confidance Kids'}.
+        </p>
+        <p className="mt-2 text-sm text-warm-gray">
+          We'll email you if a space opens.
+        </p>
+        <p className="mt-6 text-sm text-warm-gray">
+          Questions? Email confidancejessica@gmail.com
+        </p>
+      </div>
+    )
+  }
+
   if (submitted) {
     return (
       <div className="text-center py-4">
@@ -356,6 +419,36 @@ export function BookingForm() {
 
   return (
     <div>
+      {/* Waitlist Modal */}
+      {showWaitlistModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="mx-4 rounded-3xl bg-white p-8 max-w-md shadow-lg">
+            <h3 className="font-heading text-xl font-bold text-charcoal">Class Full</h3>
+            <p className="mt-3 text-sm text-charcoal-light">
+              This class is currently full. Would you like to join the waitlist? We'll email you if a space becomes available.
+            </p>
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={() => {
+                  setShowWaitlistModal(false)
+                  setChildIdForWaitlist('')
+                }}
+                className="btn-secondary flex-1 text-sm"
+              >
+                No, thanks
+              </button>
+              <button
+                onClick={handleJoinWaitlist}
+                disabled={joiningWaitlist}
+                className="btn-primary flex-1 text-sm disabled:opacity-50"
+              >
+                {joiningWaitlist ? 'Joining...' : 'Join waitlist'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Progress */}
       <div className="mb-10 flex items-center justify-between">
         {['Class', 'Booking', 'Child', 'Contact', 'Confirm'].map((label, i) => (

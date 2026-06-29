@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { label: 'Classes', href: '/admin/classes' },
   { label: 'Terms', href: '/admin/terms' },
   { label: 'Waivers', href: '/admin/waivers' },
+  { label: 'Waitlists', href: '/admin/waitlists' },
   { label: 'Comms', href: '/admin/comms' },
   { label: 'Messages', href: '/admin/messages' },
   { label: 'Reports', href: '/admin/reports' },
