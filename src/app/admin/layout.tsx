@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { label: 'Today', href: '/admin/today' },
   { label: 'Check-in', href: '/admin/check-in' },
   { label: 'Bookings', href: '/admin/bookings' },
+  { label: 'Payments Failed', href: '/admin/payments-failed' },
   { label: 'Families', href: '/admin/families' },
   { label: 'Classes', href: '/admin/classes' },
   { label: 'Terms', href: '/admin/terms' },
