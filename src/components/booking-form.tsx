@@ -21,6 +21,7 @@ export function BookingForm() {
 
   const [waiver, setWaiver] = useState<{ id: string; title: string; body_md: string; published_at: string } | null>(null)
   const [waiverSigned, setWaiverSigned] = useState(false)
+  const [hasSignedPrevious, setHasSignedPrevious] = useState(false)
   const [signatureText, setSignatureText] = useState('')
   const [signingWaiver, setSigningWaiver] = useState(false)
 
@@ -66,6 +67,7 @@ export function BookingForm() {
           const data = await res.json()
           setWaiver(data.waiver)
           setWaiverSigned(data.signed)
+          setHasSignedPrevious(data.hasSignedPrevious || false)
         }
       } catch {
         // Silent fail by design
@@ -754,6 +756,11 @@ export function BookingForm() {
 
           {waiver && !waiverSigned && (
             <div className="rounded-2xl bg-cream p-8">
+              {hasSignedPrevious && (
+                <div className="mb-4 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
+                  <p className="text-sm text-amber-900">Our terms have been updated. Please review and re-sign.</p>
+                </div>
+              )}
               <h3 className="font-heading text-lg font-bold">Sign Waiver: {waiver.title}</h3>
               <div
                 className="mt-4 prose prose-sm max-w-none text-charcoal"

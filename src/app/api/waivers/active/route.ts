@@ -14,14 +14,14 @@ export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization')
     if (!authHeader) {
-      return NextResponse.json({ waiver: null, signed: true })
+      return NextResponse.json({ waiver: null, signed: true, hasSignedPrevious: false })
     }
 
     const token = authHeader.replace('Bearer ', '')
     const { data: { user } } = await supabase.auth.getUser(token)
 
     if (!user) {
-      return NextResponse.json({ waiver: null, signed: true })
+      return NextResponse.json({ waiver: null, signed: true, hasSignedPrevious: false })
     }
 
     const parentId = user.id
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       .limit(1)
 
     if (waiversError || !waiversData || waiversData.length === 0) {
-      return NextResponse.json({ waiver: null, signed: true })
+      return NextResponse.json({ waiver: null, signed: true, hasSignedPrevious: false })
     }
 
     const activeWaiver = waiversData[0]
@@ -51,7 +51,19 @@ export async function GET(request: NextRequest) {
       .maybeSingle()
 
     if (sigError) {
-      return NextResponse.json({ waiver: null, signed: true })
+      return NextResponse.json({ waiver: null, signed: true, hasSignedPrevious: false })
+    }
+
+    // Check if parent has signed any waiver other than the active one
+    const { data: previousSignatures, error: prevError } = await supabase
+      .from('waiver_signatures')
+      .select('id')
+      .eq('parent_id', parentId)
+      .neq('waiver_id', activeWaiver.id)
+      .limit(1)
+
+    if (prevError) {
+      return NextResponse.json({ waiver: null, signed: true, hasSignedPrevious: false })
     }
 
     return NextResponse.json({
@@ -62,8 +74,9 @@ export async function GET(request: NextRequest) {
         published_at: activeWaiver.published_at,
       },
       signed: !!signature,
+      hasSignedPrevious: !!previousSignatures && previousSignatures.length > 0,
     })
   } catch {
-    return NextResponse.json({ waiver: null, signed: true })
+    return NextResponse.json({ waiver: null, signed: true, hasSignedPrevious: false })
   }
 }

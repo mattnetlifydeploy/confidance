@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { getSupabase } from '@/lib/supabase'
 import { AnimatedBubbles } from '@/components/animated-bubbles'
+import { WaiverNudge } from '@/components/waiver-nudge'
 import { CLASSES, VENUE, CURRENT_TERM } from '@/lib/constants'
 import type { Child, Booking } from '@/lib/database.types'
 
@@ -34,6 +35,8 @@ export default function DashboardPage() {
 
   const [banners, setBanners] = useState<BannerRow[]>([])
   const [bannersLoading, setBannersLoading] = useState(true)
+
+  const [activeWaiverNeeded, setActiveWaiverNeeded] = useState(false)
 
   type WaiverEntry = {
     waiver: { id: string; title: string; body_md: string; published_at: string }
@@ -123,6 +126,28 @@ export default function DashboardPage() {
     if (user) fetchBanners()
   }, [user])
 
+  // Fetch active waiver status
+  useEffect(() => {
+    async function fetchActiveWaiverStatus() {
+      if (!user) return
+      try {
+        const supabase = getSupabase()
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session?.access_token) return
+        const res = await fetch('/api/waivers/active', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        })
+        if (res.ok) {
+          const data = await res.json()
+          setActiveWaiverNeeded(!!data.waiver && !data.signed)
+        }
+      } catch {
+        // Silent fail by design
+      }
+    }
+    if (user) fetchActiveWaiverStatus()
+  }, [user])
+
   // Fetch waivers
   const fetchWaivers = async () => {
     if (!user) return
@@ -170,6 +195,9 @@ export default function DashboardPage() {
       <AnimatedBubbles count={6} />
 
       <div className="relative z-10 mx-auto max-w-4xl">
+        {/* Waiver Nudge */}
+        {activeWaiverNeeded && <WaiverNudge needsWaiver={true} />}
+
         {/* Header */}
         <div className="reveal flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -261,7 +289,7 @@ export default function DashboardPage() {
 
         {/* Waivers */}
         {!waiversLoading && waiverEntries.length > 0 && (
-          <div className="reveal mt-12">
+          <div id="waivers" className="reveal mt-12">
             <h2 className="font-heading text-xl font-bold">Waivers</h2>
             <div className="mt-6 space-y-4">
               {waiverEntries.map((entry) => {
