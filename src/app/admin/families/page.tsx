@@ -22,6 +22,8 @@ export default function FamiliesPage() {
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [expandedChildIds, setExpandedChildIds] = useState<Set<string>>(new Set())
+  const [savingNotes, setSavingNotes] = useState<Map<string, boolean>>(new Map())
+  const [noteErrors, setNoteErrors] = useState<Map<string, string>>(new Map())
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -111,6 +113,38 @@ export default function FamiliesPage() {
     setExpandedChildIds(newSet)
   }
 
+  const saveNotes = async (parentId: string, notes: string | null) => {
+    setSavingNotes(prev => new Map(prev).set(parentId, true))
+    setNoteErrors(prev => new Map(prev).set(parentId, ''))
+
+    try {
+      const token = localStorage.getItem('supabase.auth.token')
+      if (!token) {
+        throw new Error('Not authenticated')
+      }
+
+      const res = await fetch('/api/admin/family-notes', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${JSON.parse(token).session.access_token}`,
+        },
+        body: JSON.stringify({ parentId, notes: notes || null }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to save notes')
+      }
+
+      setSavingNotes(prev => new Map(prev).set(parentId, false))
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to save notes'
+      setNoteErrors(prev => new Map(prev).set(parentId, errorMsg))
+      setSavingNotes(prev => new Map(prev).set(parentId, false))
+    }
+  }
+
   if (loading) {
     return (
       <div className="mt-6 flex justify-center rounded-3xl bg-white p-8 shadow-sm card-glow">
@@ -167,6 +201,32 @@ export default function FamiliesPage() {
                 <span className="inline-block rounded-full bg-cream px-3 py-1 text-xs font-600 text-warm-gray">
                   {fam.children.length} child{fam.children.length !== 1 ? 'ren' : ''}
                 </span>
+              </div>
+
+              <div className="mt-4 space-y-4">
+                <div>
+                  <label className="block text-xs font-600 text-warm-gray mb-2">Admin Notes</label>
+                  <textarea
+                    value={fam.parent.admin_notes || ''}
+                    onChange={(e) => {
+                      setFamilies(families.map(f =>
+                        f.parent.id === fam.parent.id
+                          ? { ...f, parent: { ...f.parent, admin_notes: e.target.value } }
+                          : f
+                      ))
+                    }}
+                    onBlur={() => saveNotes(fam.parent.id, fam.parent.admin_notes || null)}
+                    placeholder="Add internal notes about this family..."
+                    className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm placeholder-warm-gray/50 focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/20 resize-none"
+                    rows={3}
+                  />
+                  {noteErrors.get(fam.parent.id) && (
+                    <p className="mt-1 text-xs text-red-600">{noteErrors.get(fam.parent.id)}</p>
+                  )}
+                  {savingNotes.get(fam.parent.id) && (
+                    <p className="mt-1 text-xs text-warm-gray">Saving...</p>
+                  )}
+                </div>
               </div>
 
               <div className="mt-4 space-y-3">
