@@ -43,7 +43,6 @@ export function Footer() {
             <ul className="mt-5 space-y-3">
               <FooterLink href="/about">About Jess</FooterLink>
               <FooterLink href="/classes">Our Classes</FooterLink>
-              <FooterLink href="/timetable">Timetable</FooterLink>
               <FooterLink href="/faqs">FAQs</FooterLink>
             </ul>
           </div>
