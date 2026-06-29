@@ -89,6 +89,13 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--navy);
 }
 
+/* On navy sections (bg-navy ... text-white) the base navy heading colour
+   above would otherwise win over the section's inherited light text and
+   render headings navy-on-navy. Let headings follow the section colour. */
+.bg-navy :where(h1, h2, h3, h4, h5, h6) {
+  color: inherit;
+}
+
 ::selection {
   background: var(--teal);
   color: var(--pale);
