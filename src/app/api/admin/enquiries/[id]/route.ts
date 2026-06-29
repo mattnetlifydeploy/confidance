@@ -6,7 +6,7 @@ import { updateEnquiry, ENQUIRY_STATUSES } from '@/lib/schools'
 import { type EnquiryStatus } from '@/lib/schools-schema'
 
 const updateEnquirySchema = z.object({
-  status: z.enum(['new', 'contacted', 'interested', 'signed', 'rejected']).optional(),
+  status: z.enum(['new', 'contacted', 'interested', 'signed', 'lost']).optional(),
   adminNotes: z.string().trim().max(5000).nullable().optional(),
 })
 

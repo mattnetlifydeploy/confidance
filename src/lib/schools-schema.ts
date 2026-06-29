@@ -25,7 +25,7 @@ export const ENQUIRY_STATUSES = [
   'contacted',
   'interested',
   'signed',
-  'rejected',
+  'lost',
 ] as const
 export type EnquiryStatus = (typeof ENQUIRY_STATUSES)[number]
 
@@ -34,7 +34,7 @@ export const ENQUIRY_STATUS_LABELS: Record<EnquiryStatus, string> = {
   contacted: 'Contacted',
   interested: 'Interested',
   signed: 'Signed up',
-  rejected: 'Not proceeding',
+  lost: 'Lost',
 }
 
 export type SchoolEnquiry = {
