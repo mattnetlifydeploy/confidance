@@ -3,7 +3,8 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Our Classes | Confidance',
-  description: 'Baby Boogie for ages 2 to 4 and Confidance Kids for ages 3 to 6. Performer-led performing arts clubs with singing, acting and dance for young children.',
+  description:
+    'After School Musical Theatre Clubs. Performer-led singing, acting and dance for primary-school children. Supportive, age-appropriate and designed to create joy.',
 }
 
 export default function ClassesPage() {
@@ -20,118 +21,80 @@ export default function ClassesPage() {
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
               </svg>
-              Two class types
+              Musical theatre clubs
             </span>
             <h1 className="reveal mt-6 font-heading text-4xl font-bold leading-tight text-navy md:text-5xl lg:text-6xl">
               Performer-led performing arts{' '}
               <span className="font-script font-600 text-teal">for young learners</span>
             </h1>
-            <p className="reveal mt-6 max-w-xl font-body text-lg text-charcoal-light">
-              Singing, acting and dance for confident kids. Both classes are supportive, age-appropriate, and designed to help your child express themselves.
+            <p className="reveal mx-auto mt-6 max-w-xl font-body text-lg text-charcoal-light">
+              After School Musical Theatre Clubs. Classes are supportive, age-appropriate and designed to create joy!
             </p>
           </div>
         </div>
       </section>
 
-      {/* ═══ FLIP CARDS ═══ */}
+      {/* ═══ WHAT A CLASS LOOKS LIKE ═══ */}
       <section className="section-padding relative bg-white">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="grid gap-8 md:grid-cols-2">
-            {/* Baby Boogie Flip Card */}
-            <div className="reveal flip-card h-[520px]" tabIndex={0} role="button" aria-label="Baby Boogie class details - press Enter to flip">
-              <div className="flip-card-inner">
-                <div className="flip-card-front overflow-hidden rounded-3xl bg-gradient-to-br from-navy via-navy-light to-teal">
-                  <div className="absolute bottom-0 left-0 right-0 p-8">
-                    <span className="inline-block rounded-full bg-white/20 backdrop-blur-sm px-4 py-1 text-xs font-600 text-white">
-                      Ages 2 to 4
+          <div className="grid items-start gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
+            <div>
+              <p className="reveal font-heading text-sm font-600 uppercase tracking-[0.2em] text-teal">Inside a session</p>
+              <h2 className="reveal mt-3 font-heading text-3xl font-bold text-navy md:text-4xl">
+                What a class looks like
+              </h2>
+              <p className="reveal mt-4 max-w-xl font-body text-lg text-charcoal-light">
+                Every club follows the same warm, predictable rhythm, so children always know what is coming next and feel safe to join in.
+              </p>
+              <ol className="mt-10 space-y-4">
+                {[
+                  { n: '1', title: 'Warm welcome', desc: 'A gentle group warm-up and hello game to settle in and shake off the school day.' },
+                  { n: '2', title: 'Singing', desc: 'Vocal play, songs and breath work that grow expression and self-belief.' },
+                  { n: '3', title: 'Acting', desc: 'Drama games and storytelling that build the confidence to speak up and be heard.' },
+                  { n: '4', title: 'Dance', desc: 'Age-appropriate choreography and creative movement that builds coordination and stage presence.' },
+                  { n: '5', title: 'Share and shine', desc: 'Finishing together and celebrating what each child has made that day.' },
+                ].map((step, i) => (
+                  <li
+                    key={step.title}
+                    className={`reveal stagger-${(i % 3) + 1} flex gap-5 rounded-2xl border border-teal-border bg-pale/40 p-5`}
+                  >
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal/15 font-heading text-base font-bold text-teal">
+                      {step.n}
                     </span>
-                    <h3 className="mt-3 font-heading text-3xl font-bold text-white">Baby Boogie</h3>
-                    <p className="mt-1 text-xs text-white/70">Thursday 3:45pm to 4:15pm</p>
-                    <p className="mt-2 text-sm text-white/70">Tap to see more</p>
-                  </div>
-                </div>
-                <div className="flip-card-back overflow-hidden rounded-3xl bg-gradient-to-br from-navy via-navy-light to-teal p-8 text-white">
-                  <h3 className="font-heading text-2xl font-bold">Baby Boogie</h3>
-                  <p className="mt-2 text-sm text-white/80">
-                    The perfect first class. Playful, gentle, and full of imagination, singing and movement.
-                  </p>
-                  <ul className="mt-6 space-y-3">
-                    {[
-                      'Music, singing and rhythm games',
-                      'Basic dance movement',
-                      'Imaginative play and storytelling',
-                      'Coordination and balance',
-                      'Confidence through play',
-                    ].map((item) => (
-                      <li key={item} className="flex items-center gap-3 text-sm">
-                        <svg className="h-5 w-5 shrink-0 text-teal-light" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-6 flex items-center gap-4 rounded-2xl bg-white/10 backdrop-blur-sm p-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 font-heading text-sm font-bold">30</div>
                     <div>
-                      <p className="font-heading text-sm font-700">Minutes per class</p>
-                      <p className="text-xs text-white/60">Small groups, parents welcome</p>
+                      <h3 className="font-heading text-lg font-700 text-navy">{step.title}</h3>
+                      <p className="mt-1 font-body text-sm leading-relaxed text-charcoal-light">{step.desc}</p>
                     </div>
-                  </div>
-                  <Link href="/book" className="btn-glass mt-6 w-full text-center text-sm">
-                    Book a trial
-                  </Link>
-                </div>
-              </div>
+                  </li>
+                ))}
+              </ol>
             </div>
 
-            {/* Confidance Flip Card */}
-            <div className="reveal stagger-2 flip-card h-[520px]" tabIndex={0} role="button" aria-label="Confidance Kids class details - press Enter to flip">
-              <div className="flip-card-inner">
-                <div className="flip-card-front overflow-hidden rounded-3xl bg-gradient-to-br from-teal via-teal-dark to-navy">
-                  <div className="absolute bottom-0 left-0 right-0 p-8">
-                    <span className="inline-block rounded-full bg-white/20 backdrop-blur-sm px-4 py-1 text-xs font-600 text-white">
-                      Ages 3 to 6
-                    </span>
-                    <h3 className="mt-3 font-heading text-3xl font-bold text-white">Confidance Kids</h3>
-                    <p className="mt-1 text-xs text-white/70">Thursday 4:20pm to 4:50pm</p>
-                    <p className="mt-2 text-sm text-white/70">Tap to see more</p>
-                  </div>
-                </div>
-                <div className="flip-card-back overflow-hidden rounded-3xl bg-gradient-to-br from-teal via-teal-dark to-navy p-8 text-white">
-                  <h3 className="font-heading text-2xl font-bold">Confidance Kids</h3>
-                  <p className="mt-2 text-sm text-white/80">
-                    A step up with structured routines, singing, acting and dance. Building friendships and confidence.
-                  </p>
-                  <ul className="mt-6 space-y-3">
-                    {[
-                      'Acting and drama games',
-                      'Dance routines and choreography',
-                      'Singing and musical games',
-                      'Creative self expression',
-                      'Confidence and teamwork',
-                    ].map((item) => (
-                      <li key={item} className="flex items-center gap-3 text-sm">
-                        <svg className="h-5 w-5 shrink-0 text-teal-light" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-6 flex items-center gap-4 rounded-2xl bg-white/10 backdrop-blur-sm p-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 font-heading text-sm font-bold">30</div>
-                    <div>
-                      <p className="font-heading text-sm font-700">Minutes per class</p>
-                      <p className="text-xs text-white/60">Independent, small groups</p>
-                    </div>
-                  </div>
-                  <Link href="/book" className="btn-glass mt-6 w-full text-center text-sm">
-                    Book a trial
-                  </Link>
-                </div>
+            {/* Practical facts */}
+            <aside className="reveal-scale lg:sticky lg:top-28">
+              <div className="card-glow rounded-3xl border border-teal-border bg-gradient-to-br from-pale to-pale-light p-8">
+                <h3 className="font-heading text-xl font-bold text-navy">The essentials</h3>
+                <ul className="mt-6 space-y-4">
+                  {[
+                    'Runs in your child’s own school, straight after the bell',
+                    'Small, supportive groups led by Jessica',
+                    'Singing, acting and dance in every single session',
+                    'Made for primary-school children',
+                    'Supportive, age-appropriate and full of joy',
+                  ].map((fact) => (
+                    <li key={fact} className="flex items-start gap-3 font-body text-sm text-charcoal">
+                      <svg className="mt-0.5 h-5 w-5 shrink-0 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                      {fact}
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/for-schools" className="btn-primary mt-8 w-full text-center text-sm">
+                  Bring Confidance to your school
+                </Link>
               </div>
-            </div>
+            </aside>
           </div>
         </div>
       </section>
@@ -213,10 +176,10 @@ export default function ClassesPage() {
         <div className="blob absolute -left-40 bottom-[-10rem] h-[480px] w-[480px] bg-teal-light/10 blur-3xl" />
         <div className="relative mx-auto max-w-2xl text-center">
           <h2 className="reveal font-heading text-3xl font-bold md:text-4xl">
-            Not sure which class? <span className="text-teal-light">No problem.</span>
+            Ready to give it a <span className="text-teal-light">go?</span>
           </h2>
           <p className="reveal mt-6 text-lg leading-relaxed text-pale">
-            Book a trial session and Jessica will help you find the perfect fit for your little one.
+            Come and watch your child light up. Jessica will make sure they feel right at home from the very first session.
           </p>
           <div className="reveal mt-10 flex flex-wrap justify-center gap-4">
             <Link href="/book" className="btn-primary group">
