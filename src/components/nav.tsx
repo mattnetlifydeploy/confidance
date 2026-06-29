@@ -46,9 +46,9 @@ export function Nav() {
             {user ? (
               <Link
                 href="/dashboard"
-                className="group flex items-center gap-2 rounded-full bg-cream px-4 py-2 font-heading text-sm font-600 text-charcoal transition-all hover:bg-coral hover:text-white"
+                className="group flex items-center gap-2 rounded-full bg-cream px-4 py-2 font-heading text-sm font-600 text-charcoal transition-all hover:bg-teal hover:text-white"
               >
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-coral to-lilac text-xs font-bold text-white">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-teal to-navy text-xs font-bold text-white">
                   {profile?.full_name?.[0] || 'U'}
                 </span>
                 Dashboard
@@ -57,7 +57,7 @@ export function Nav() {
               <>
                 <Link
                   href="/login"
-                  className="font-heading text-sm font-600 text-charcoal-light transition-colors hover:text-coral"
+                  className="font-heading text-sm font-600 text-charcoal-light transition-colors hover:text-teal"
                 >
                   Log In
                 </Link>
@@ -100,7 +100,7 @@ export function Nav() {
                   href="/dashboard"
                   className="flex items-center gap-3 rounded-xl bg-cream p-3 font-heading text-sm font-600"
                 >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-coral to-lilac text-xs font-bold text-white">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-teal to-navy text-xs font-bold text-white">
                     {profile?.full_name?.[0] || 'U'}
                   </span>
                   My Dashboard
@@ -133,8 +133,8 @@ function NavLink({ href, active, children }: { href: string; active: boolean; ch
   return (
     <Link
       href={href}
-      className={`animated-underline relative font-heading text-sm font-600 transition-colors hover:text-coral ${
-        active ? 'text-coral' : 'text-charcoal-light'
+      className={`animated-underline relative font-heading text-sm font-600 transition-colors hover:text-teal ${
+        active ? 'text-teal' : 'text-charcoal-light'
       }`}
     >
       {children}
@@ -146,8 +146,8 @@ function MobileLink({ href, active, children }: { href: string; active: boolean;
   return (
     <Link
       href={href}
-      className={`rounded-xl px-3 py-3 font-heading text-lg font-600 transition-all hover:bg-cream hover:text-coral ${
-        active ? 'bg-cream text-coral' : 'text-charcoal'
+      className={`rounded-xl px-3 py-3 font-heading text-lg font-600 transition-all hover:bg-cream hover:text-teal ${
+        active ? 'bg-cream text-teal' : 'text-charcoal'
       }`}
     >
       {children}

@@ -135,7 +135,7 @@ export default function AboutJessicaPage() {
       <section className="relative bg-navy py-20 text-white">
         <div className="mx-auto max-w-4xl px-6 text-center">
           <svg className="reveal mx-auto h-8 w-8 text-teal-light opacity-50" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M3 21c3 0 7-1 7-8V5c0-1.25-4.044-5-6.5-5C.5 0 0 1.972 0 4.972 0 7.259.495 10.157 2.966 10.157c.196 0 .605-.088 1.08-.088.405 0 .763.041 1.235-.041-.495.1-.9.3-1.54.9-.635.615-.935 1.098-.935 1.22 0 .216.09.315.648.315.547 0 1.075-.057 1.242-.102.703-.23 1.851-.905 2.54-2.467.34-.795.744-2.323.744-4.108C10 4.505 8.397 2.29 6.747 2.29c-.535 0-1.006.104-1.385.374C5.56 2.887 5.51 4.374 5.51 5.868c0 3.95.137 8.905 3.reconsider 8.905 2.34 0 4.372-1.637 5.580-0z" />
+            <path d="M9.983 3v7.391c0 5.704-3.731 9.57-8.983 10.609l-.995-2.151c2.432-.917 3.995-3.638 3.995-5.849h-4v-10h9.983zm14.017 0v7.391c0 5.704-3.731 9.57-8.983 10.609l-.995-2.151c2.432-.917 3.995-3.638 3.995-5.849h-4v-10h9.983z" />
           </svg>
           <p className="reveal mt-4 font-script text-4xl leading-tight text-teal-light">
             Every child deserves to feel confident, celebrated and proud of who they are.
