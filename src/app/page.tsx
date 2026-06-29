@@ -53,22 +53,27 @@ export default function Home() {
         <div className="blob absolute -right-32 -top-24 h-[560px] w-[560px] bg-teal/20 blur-3xl" />
         <div className="blob absolute -left-40 bottom-[-12rem] h-[520px] w-[520px] bg-teal-light/10 blur-3xl" />
         <div className="absolute left-1/2 top-0 h-[1px] w-2/3 -translate-x-1/2 bg-gradient-to-r from-transparent via-teal/40 to-transparent" />
+        <PlayfulMotionBg variant="navy" />
 
         <div className="relative mx-auto max-w-6xl px-6">
           <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
             <div>
-              <h1 className="reveal font-heading text-4xl font-bold leading-[1.08] md:text-5xl lg:text-6xl">
+              <span className="reveal inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-5 py-2 font-heading text-sm font-600 text-pale backdrop-blur-sm">
+                <span className="h-1.5 w-1.5 rounded-full bg-teal-light" />
+                Hi, I&apos;m Jessica
+              </span>
+              <h1 className="reveal mt-6 font-heading text-4xl font-bold leading-[1.08] md:text-5xl lg:text-6xl">
                 Building confidence through{' '}
                 <span className="font-script font-600 text-teal-light">performing arts</span>
               </h1>
               <p className="reveal mt-6 max-w-xl font-body text-lg text-pale/90">
-                Jessica, a Musical Theatre performer, leads after-school singing, acting and dance
-                clubs in schools across the region. Professional, structured and completely
-                hands-off for your team.
+                I&apos;m a professional musical theatre performer, and I run after-school singing,
+                acting and dance clubs inside primary schools. One joyful hour a week where every
+                child gets their moment to shine, with zero admin for your team.
               </p>
               <div className="reveal mt-9 flex flex-wrap gap-4">
-                <Link href="/for-schools" className="btn-primary">Register your school</Link>
-                <Link href="/schools" className="btn-glass">Browse clubs</Link>
+                <Link href="/for-schools/enquire" className="btn-primary">Enquire for your school</Link>
+                <Link href="/parents/register-interest" className="btn-glass">I&apos;m a parent</Link>
               </div>
               <div className="reveal mt-10 flex flex-wrap gap-2.5">
                 {TRUST_BADGES.map((badge) => (
