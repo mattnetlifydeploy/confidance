@@ -8,6 +8,7 @@ import { getSupabase } from '@/lib/supabase'
 import { AnimatedBubbles } from '@/components/animated-bubbles'
 import { WaiverNudge } from '@/components/waiver-nudge'
 import { CLASSES, VENUE, CURRENT_TERM } from '@/lib/constants'
+import { nextSessionDate, formatFullSession, whatToBring } from '@/lib/booking-display'
 import type { Child, Booking } from '@/lib/database.types'
 
 type PastBooking = Booking & { childName: string; className?: string }
@@ -261,27 +262,70 @@ export default function DashboardPage() {
             <div className="reveal mt-10">
               <h2 className="font-heading text-xl font-bold">Active Bookings</h2>
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                {activeBookings.map((booking) => (
-                  <div key={booking.id} className="card-glow rounded-3xl bg-white p-6">
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-coral/15 to-lilac/15">
-                        <svg className="h-6 w-6 text-coral" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
+                {activeBookings.map((booking) => {
+                  const today = new Date().toISOString().slice(0, 10)
+                  const nextSession = booking.booking_type === 'term'
+                    ? nextSessionDate(booking.term_name, booking.term_year, today)
+                    : null
+                  const sessionDisplay = nextSession
+                    ? formatFullSession(nextSession, booking.class_type)
+                    : `${CLASSES[booking.class_type as keyof typeof CLASSES]?.day || 'Thursday'}, ${CLASSES[booking.class_type as keyof typeof CLASSES]?.time || 'TBA'}`
+
+                  return (
+                    <div key={booking.id} className="card-glow rounded-3xl bg-white p-6">
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-coral/15 to-lilac/15">
+                          <svg className="h-6 w-6 text-coral" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-heading text-base font-bold">{booking.className}</h3>
+                          <p className="text-xs text-warm-gray">
+                            {booking.booking_type === 'term' ? `${CURRENT_TERM.name} Term ${CURRENT_TERM.year}` : booking.booking_type === 'single' ? 'Single Session' : 'Free Trial'}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <h3 className="font-heading text-base font-bold">{booking.className}</h3>
-                        <p className="text-xs text-warm-gray">
-                          {booking.booking_type === 'term' ? `${CURRENT_TERM.name} Term ${CURRENT_TERM.year}` : booking.booking_type === 'single' ? 'Single Session' : 'Free Trial'}
-                        </p>
+
+                      <div className="mt-4 space-y-3 border-t border-border pt-4 text-sm">
+                        <div className="flex items-center gap-2">
+                          <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-700 text-green-700">Active</span>
+                        </div>
+
+                        <div className="text-warm-gray">
+                          <strong className="text-charcoal">{booking.childName}</strong>
+                        </div>
+
+                        <div className="text-warm-gray">
+                          Next session<span className="font-medium text-charcoal">: {sessionDisplay}</span>
+                        </div>
+
+                        <div className="text-warm-gray">
+                          <strong className="text-charcoal">{VENUE.name}</strong>
+                          <div className="mt-1 text-xs text-charcoal-light">{VENUE.address}</div>
+                        </div>
+
+                        <div className="text-xs text-warm-gray italic">
+                          {whatToBring()}
+                        </div>
+
+                        <button
+                          onClick={async () => {
+                            if (!confirm('Are you sure you want to cancel this booking?')) return
+                            const supabase = getSupabase()
+                            await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', booking.id)
+                            setPastBookings((prev) =>
+                              prev.map((b) => b.id === booking.id ? { ...b, status: 'cancelled' } : b),
+                            )
+                          }}
+                          className="rounded-full bg-red-50 px-3 py-1.5 text-xs font-600 text-red-600 transition-all hover:bg-red-100"
+                        >
+                          Cancel Booking
+                        </button>
                       </div>
                     </div>
-                    <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4 text-sm">
-                      <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-700 text-green-700">Active</span>
-                      <span className="text-warm-gray">Child: <strong className="text-charcoal">{booking.childName}</strong></span>
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )
