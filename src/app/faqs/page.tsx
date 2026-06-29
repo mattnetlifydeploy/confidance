@@ -92,7 +92,7 @@ export default function FaqsPage() {
 
         <div className="relative mx-auto max-w-6xl px-6">
           <div className="mx-auto max-w-2xl text-center">
-            <p className="reveal font-heading text-sm font-600 uppercase tracking-[0.2em] text-teal">
+            <p className="reveal font-heading text-sm font-600 uppercase tracking-[0.2em] text-teal-light">
               Got questions?
             </p>
             <h1 className="reveal mt-6 font-heading text-4xl font-bold leading-tight text-white md:text-5xl lg:text-6xl">

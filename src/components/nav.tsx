@@ -26,14 +26,14 @@ export function Nav() {
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         scrolled
-          ? 'bg-white/85 backdrop-blur-xl shadow-[0_1px_30px_rgba(45,42,50,0.06)]'
-          : 'bg-transparent'
+          ? 'bg-navy/95 backdrop-blur-xl shadow-[0_10px_40px_rgba(15,42,54,0.35)] border-b border-white/10'
+          : 'bg-navy/80 backdrop-blur-xl border-b border-white/5'
       }`}
     >
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <Link href="/" className="group font-heading text-2xl font-bold text-charcoal">
-          <span className="transition-colors duration-300 group-hover:text-charcoal-light">Confi</span>
-          <span className="text-gradient-animated">dance</span>
+        <Link href="/" className="group font-heading text-2xl font-bold">
+          <span className="text-white transition-colors duration-300 group-hover:text-pale">Confi</span>
+          <span className="text-teal-light">dance</span>
         </Link>
 
         <div className="hidden items-center gap-8 md:flex">
@@ -57,7 +57,7 @@ export function Nav() {
               <>
                 <Link
                   href="/login"
-                  className="font-heading text-sm font-600 text-charcoal-light transition-colors hover:text-teal"
+                  className="font-heading text-sm font-600 text-pale/80 transition-colors hover:text-white"
                 >
                   Log In
                 </Link>
@@ -74,9 +74,9 @@ export function Nav() {
           className="relative flex h-10 w-10 flex-col items-center justify-center gap-1.5 md:hidden"
           aria-label="Toggle menu"
         >
-          <span className={`block h-0.5 w-6 bg-charcoal transition-all duration-300 ${mobileOpen ? 'translate-y-2 rotate-45' : ''}`} />
-          <span className={`block h-0.5 w-6 bg-charcoal transition-all duration-300 ${mobileOpen ? 'opacity-0 scale-0' : ''}`} />
-          <span className={`block h-0.5 w-6 bg-charcoal transition-all duration-300 ${mobileOpen ? '-translate-y-2 -rotate-45' : ''}`} />
+          <span className={`block h-0.5 w-6 bg-pale transition-all duration-300 ${mobileOpen ? 'translate-y-2 rotate-45' : ''}`} />
+          <span className={`block h-0.5 w-6 bg-pale transition-all duration-300 ${mobileOpen ? 'opacity-0 scale-0' : ''}`} />
+          <span className={`block h-0.5 w-6 bg-pale transition-all duration-300 ${mobileOpen ? '-translate-y-2 -rotate-45' : ''}`} />
         </button>
       </nav>
 
@@ -86,7 +86,7 @@ export function Nav() {
           mobileOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
-        <div className="border-t border-border bg-white/95 backdrop-blur-xl">
+        <div className="border-t border-white/10 bg-navy/98 backdrop-blur-xl">
           <div className="flex flex-col gap-1 px-6 py-6">
             <MobileLink href="/about" active={pathname === '/about'}>About</MobileLink>
             <MobileLink href="/classes" active={pathname === '/classes'}>Classes</MobileLink>
@@ -94,11 +94,11 @@ export function Nav() {
             <MobileLink href="/faqs" active={pathname === '/faqs'}>FAQs</MobileLink>
             <MobileLink href="/for-schools" active={pathname === '/for-schools'}>For Schools</MobileLink>
 
-            <div className="mt-4 border-t border-border pt-4">
+            <div className="mt-4 border-t border-white/10 pt-4">
               {user ? (
                 <Link
                   href="/dashboard"
-                  className="flex items-center gap-3 rounded-xl bg-cream p-3 font-heading text-sm font-600"
+                  className="flex items-center gap-3 rounded-xl bg-cream p-3 font-heading text-sm font-600 text-charcoal"
                 >
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-teal to-navy text-xs font-bold text-white">
                     {profile?.full_name?.[0] || 'U'}
@@ -133,8 +133,8 @@ function NavLink({ href, active, children }: { href: string; active: boolean; ch
   return (
     <Link
       href={href}
-      className={`animated-underline relative font-heading text-sm font-600 transition-colors hover:text-teal ${
-        active ? 'text-teal' : 'text-charcoal-light'
+      className={`animated-underline relative font-heading text-sm font-600 transition-colors hover:text-white ${
+        active ? 'text-teal-light' : 'text-pale/80'
       }`}
     >
       {children}
@@ -146,8 +146,8 @@ function MobileLink({ href, active, children }: { href: string; active: boolean;
   return (
     <Link
       href={href}
-      className={`rounded-xl px-3 py-3 font-heading text-lg font-600 transition-all hover:bg-cream hover:text-teal ${
-        active ? 'bg-cream text-teal' : 'text-charcoal'
+      className={`rounded-xl px-3 py-3 font-heading text-lg font-600 transition-all hover:bg-white/5 hover:text-teal-light ${
+        active ? 'bg-white/10 text-teal-light' : 'text-pale/85'
       }`}
     >
       {children}
