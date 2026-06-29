@@ -155,7 +155,7 @@ export default function Home() {
           </div>
           <div className="mt-14 grid gap-6 md:grid-cols-2">
             {/* Schools */}
-            <div className="reveal stagger-1 card-bezel">
+            <div className="reveal stagger-1 card-bezel card-glow">
               <div className="card-bezel-inner flex h-full flex-col p-8">
                 <span className="inline-flex w-fit items-center gap-2 rounded-full bg-teal/10 px-4 py-1.5 font-heading text-xs font-700 uppercase tracking-wide text-teal">
                   For schools
@@ -180,7 +180,7 @@ export default function Home() {
             </div>
 
             {/* Parents */}
-            <div className="reveal stagger-2 card-bezel">
+            <div className="reveal stagger-2 card-bezel card-glow">
               <div className="card-bezel-inner flex h-full flex-col p-8">
                 <span className="inline-flex w-fit items-center gap-2 rounded-full bg-navy/8 px-4 py-1.5 font-heading text-xs font-700 uppercase tracking-wide text-navy">
                   For parents
@@ -247,8 +247,10 @@ export default function Home() {
       </section>
 
       {/* ═══ FEATURED SCHOOLS / LOADING ═══ */}
-      <section className="section-padding relative bg-cream">
-        <div className="mx-auto max-w-4xl px-6 text-center">
+      <section className="section-padding relative overflow-hidden bg-cream">
+        <div className="blob absolute -left-32 top-1/2 h-80 w-80 -translate-y-1/2 bg-teal/10 blur-3xl" />
+        <div className="blob absolute -right-24 bottom-[-6rem] h-72 w-72 bg-teal-light/10 blur-3xl" />
+        <div className="relative mx-auto max-w-4xl px-6 text-center">
           <p className="reveal font-heading text-sm font-600 uppercase tracking-[0.2em] text-teal">Where we run</p>
           <h2 className="reveal mt-3 font-heading text-3xl font-bold text-navy md:text-4xl">
             More schools coming soon

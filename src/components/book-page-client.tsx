@@ -67,6 +67,8 @@ export function BookPageClient({
     <>
       <section className="relative overflow-hidden bg-navy pt-36 pb-16 text-white">
         <div className="blob absolute -right-32 -top-24 h-[480px] w-[480px] bg-teal/20 blur-3xl" />
+        <div className="blob absolute -left-40 bottom-[-8rem] h-[420px] w-[420px] bg-teal-light/10 blur-3xl" />
+        <div className="absolute left-1/2 top-0 h-px w-2/3 -translate-x-1/2 bg-gradient-to-r from-transparent via-teal/40 to-transparent" />
         <div className="relative mx-auto max-w-6xl px-6">
           <div className="mx-auto max-w-2xl text-center">
             <span className="reveal inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-5 py-2 font-heading text-sm font-600 text-pale backdrop-blur-sm">
