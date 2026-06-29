@@ -689,6 +689,28 @@ h1, h2, h3, h4, h5, h6 {
 .dancing-dot:nth-child(2) { animation-delay: 0.1s; }
 .dancing-dot:nth-child(3) { animation-delay: 0.2s; }
 
+/* ─── Wordmark "dance" animation ─── */
+/* Gentle, slow loop on the teal "dance" half of the Confidance wordmark:
+   subtle colour drift teal <-> teal-light plus a 2px vertical bob. Distinct
+   from the dancing-dot loader's @keyframes dance above. */
+
+.wordmark-dance {
+  display: inline-block;
+  animation: wordmark-dance 2.6s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes wordmark-dance {
+  0%, 100% { color: var(--teal); transform: translateY(0); }
+  50% { color: var(--teal-light); transform: translateY(-2px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wordmark-dance {
+    animation: none;
+  }
+}
+
 /* ─── Auth form styling ─── */
 
 .auth-input {

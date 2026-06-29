@@ -33,7 +33,7 @@ export function Nav() {
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <Link href="/" className="group font-heading text-2xl font-bold">
           <span className="text-white transition-colors duration-300 group-hover:text-pale">Confi</span>
-          <span className="text-teal-light">dance</span>
+          <span className="wordmark-dance text-teal">dance</span>
         </Link>
 
         <div className="hidden items-center gap-8 md:flex">
