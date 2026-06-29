@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { formatPrice } from '@/lib/stripe'
-import { CLASSES, VENUE, CURRENT_TERM, PRICING, getTermSessionDates, getRemainingSessionCount, getTermPrice, getNextTerm, getFullTermSessionCount } from '@/lib/constants'
+import { CLASSES, VENUE, CURRENT_TERM, PRICING, getTermSessionDates, getRemainingSessionCount, getTermPrice, getNextTerm, getFullTermSessionCount, SIBLING_DISCOUNT_PCT } from '@/lib/constants'
 import { bookingSchema, type BookingFormData } from '@/lib/booking-schema'
 import { renderMarkdown } from '@/lib/markdown'
 import { getSupabase } from '@/lib/supabase'
@@ -18,6 +18,7 @@ export function BookingForm() {
   const [saving, setSaving] = useState(false)
   const [trialUsed, setTrialUsed] = useState(false)
   const [quote, setQuote] = useState<{ amount: number; discountAmount: number; discountPct: number; sessionCount: number } | null>(null)
+  const [hasExistingTermBooking, setHasExistingTermBooking] = useState(false)
 
   const [waiver, setWaiver] = useState<{ id: string; title: string; body_md: string; published_at: string } | null>(null)
   const [waiverSigned, setWaiverSigned] = useState(false)
@@ -49,6 +50,39 @@ export function BookingForm() {
       }))
     }
   }, [profile])
+
+  // Check if parent has existing term booking in current term
+  useEffect(() => {
+    if (!user?.id) {
+      setHasExistingTermBooking(false)
+      return
+    }
+
+    const checkExistingTermBooking = async () => {
+      if (!supabase) {
+        setHasExistingTermBooking(false)
+        return
+      }
+
+      try {
+        const { data } = await supabase
+          .from('bookings')
+          .select('id')
+          .eq('parent_id', user.id)
+          .eq('booking_type', 'term-pass')
+          .eq('status', 'confirmed')
+          .eq('term_name', CURRENT_TERM.name)
+          .eq('term_year', CURRENT_TERM.year)
+          .limit(1)
+
+        setHasExistingTermBooking(!!data && data.length > 0)
+      } catch {
+        setHasExistingTermBooking(false)
+      }
+    }
+
+    checkExistingTermBooking()
+  }, [user?.id])
 
   // Fetch active waiver
   useEffect(() => {
@@ -474,6 +508,11 @@ export function BookingForm() {
                     <p className="mt-1 text-xs text-warm-gray">
                       {currentTermRemaining} session{currentTermRemaining !== 1 ? 's' : ''} left at {formatPrice(PRICING.term_session_price)} each
                     </p>
+                    {hasExistingTermBooking && (
+                      <p className="mt-2 text-xs font-600 text-coral">
+                        Sibling discount: {SIBLING_DISCOUNT_PCT}% off, applied at checkout
+                      </p>
+                    )}
                   </div>
                   <span className="font-heading text-sm font-700 text-coral">
                     {formatPrice(currentTermRemaining * PRICING.term_session_price)}

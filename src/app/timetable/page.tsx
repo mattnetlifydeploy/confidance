@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { AnimatedBubbles } from '@/components/animated-bubbles'
-import { VENUE, CLASSES, CURRENT_TERM, TERM_LABEL } from '@/lib/constants'
+import { VENUE, CLASSES, CURRENT_TERM, TERM_LABEL, SIBLING_DISCOUNT_PCT } from '@/lib/constants'
 
 export const metadata: Metadata = {
   title: 'Timetable & Location | Confidance',
@@ -85,6 +85,11 @@ export default function TimetablePage() {
                   </Link>
                 </div>
               ))}
+            </div>
+            <div className="mt-6 rounded-2xl border border-lilac/30 bg-lilac/5 p-4">
+              <p className="text-sm text-lilac-dark font-heading font-600">
+                Booking a 2nd child same term? {SIBLING_DISCOUNT_PCT}% off term pass automatically.
+              </p>
             </div>
           </div>
         </div>
