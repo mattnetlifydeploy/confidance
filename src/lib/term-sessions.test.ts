@@ -55,9 +55,6 @@ describe('getTermSessions', () => {
   it('removes exclusions when injected as array', async () => {
     const term = TERMS.find((t) => t.name === 'Summer' && t.year === 2026)!
     const allSessions = await getTermSessions(term, undefined, [])
-    if (allSessions.length < 2) {
-      expect.skip()
-    }
     const toExclude = [allSessions[0]]
     const result = await getTermSessions(term, undefined, toExclude)
     expect(result).not.toContain(toExclude[0])
