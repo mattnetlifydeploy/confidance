@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { getSupabase } from '@/lib/supabase'
-import { CLASSES } from '@/lib/constants'
 import type { Booking, Child, Profile } from '@/lib/database.types'
 import type { ClassType } from '@/lib/constants'
+import { useClasses } from '@/lib/use-classes'
 import {
   AdminCard,
   AdminPageHeader,
@@ -30,6 +30,7 @@ type Family = {
 }
 
 export default function FamiliesPage() {
+  const { classes: CLASSES } = useClasses()
   const toast = useToast()
   const [families, setFamilies] = useState<Family[]>([])
   const [loading, setLoading] = useState(true)

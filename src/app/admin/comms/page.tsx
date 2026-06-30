@@ -2,10 +2,12 @@
 
 import { useState } from 'react'
 import { getSupabase } from '@/lib/supabase'
-import { CLASSES, TERMS } from '@/lib/constants'
+import { TERMS } from '@/lib/constants'
+import { useClasses } from '@/lib/use-classes'
 import { AdminCard, AdminPageHeader, Button, FormField, Select, Textarea, AdminBanner } from '@/components/admin'
 
 export default function CommsPage() {
+  const { classes: CLASSES } = useClasses()
   const [emailForm, setEmailForm] = useState({
     subject: '',
     body: '',

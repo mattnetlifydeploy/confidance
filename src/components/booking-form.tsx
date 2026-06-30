@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { formatPrice } from '@/lib/stripe'
-import { CLASSES, VENUE, CURRENT_TERM, PRICING, getTermSessionDates, getRemainingSessionCount, getTermPrice, getNextTerm, getFullTermSessionCount, SIBLING_DISCOUNT_PCT } from '@/lib/constants'
+import { CURRENT_TERM, PRICING, getTermSessionDates, getRemainingSessionCount, getTermPrice, getNextTerm, getFullTermSessionCount, SIBLING_DISCOUNT_PCT } from '@/lib/constants'
+import { useClasses } from '@/lib/use-classes'
 import { bookingSchema, type BookingFormData } from '@/lib/booking-schema'
 import { renderMarkdown } from '@/lib/markdown'
 import { getSupabase } from '@/lib/supabase'
@@ -17,6 +18,7 @@ export function BookingForm({
   schools?: { id: string; name: string }[]
   defaultSchoolId?: string | null
 } = {}) {
+  const { classes: CLASSES, venue: VENUE } = useClasses()
   const { user, profile, children, refreshChildren } = useAuth()
   const [step, setStep] = useState(1)
   const [submitted, setSubmitted] = useState(false)
@@ -713,7 +715,7 @@ export function BookingForm({
                   .filter((child) => {
                     if (!form.classType) return true
                     const classInfo = CLASSES[form.classType]
-                    const [minAge, maxAge] = classInfo.ages.split(' to ').map(Number)
+                    const [minAge, maxAge] = classInfo?.ages.split(' to ').map(Number) ?? [0, 0]
                     return child.age >= minAge && child.age <= maxAge
                   })
                   .map((child) => (
@@ -748,7 +750,7 @@ export function BookingForm({
                 {children.length > 0 && children.filter((child) => {
                   if (!form.classType) return true
                   const classInfo = CLASSES[form.classType]
-                  const [minAge, maxAge] = classInfo.ages.split(' to ').map(Number)
+                  const [minAge, maxAge] = classInfo?.ages.split(' to ').map(Number) ?? [0, 0]
                   return child.age >= minAge && child.age <= maxAge
                 }).length === 0 && (
                   <div className="rounded-2xl border-2 border-dashed border-border p-6 text-center">

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { getSupabase } from '@/lib/supabase'
-import { CLASSES } from '@/lib/constants'
+import { useClasses } from '@/lib/use-classes'
 import type { Booking, Child, Profile } from '@/lib/database.types'
 import type { ClassType } from '@/lib/constants'
 import {
@@ -50,6 +50,7 @@ const TYPE_TONE: Record<string, BadgeTone> = {
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 export default function BookingsPage() {
+  const { classes: CLASSES } = useClasses()
   const toast = useToast()
   const [bookings, setBookings] = useState<Booking[]>([])
   const [childrenMap, setChildrenMap] = useState<Map<string, Child>>(new Map())

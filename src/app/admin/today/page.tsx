@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { getSupabase } from '@/lib/supabase'
-import { CLASSES, getCurrentTerm } from '@/lib/constants'
+import { getCurrentTerm } from '@/lib/constants'
+import { useClasses } from '@/lib/use-classes'
 import { getTermSessions } from '@/lib/term-sessions'
 import type { Booking, WalkIn } from '@/lib/database.types'
 import {
@@ -59,11 +60,6 @@ const EMPTY_WALKIN: WalkInFormState = {
   notes: '',
 }
 
-const CLASS_OPTIONS = Object.entries(CLASSES).map(([key, cls]) => ({
-  value: key,
-  label: cls.name,
-}))
-
 function walkInToForm(w: WalkInRow): WalkInFormState {
   return {
     parentName: w.parent_name,
@@ -102,6 +98,11 @@ function WalkInFields({
   form: WalkInFormState
   set: (patch: Partial<WalkInFormState>) => void
 }) {
+  const { classes: CLASSES } = useClasses()
+  const CLASS_OPTIONS = Object.entries(CLASSES).map(([key, cls]) => ({
+    value: key,
+    label: cls.name,
+  }))
   return (
     <div className="grid gap-4 md:grid-cols-2">
       <FormField label="Parent name *">
@@ -199,6 +200,12 @@ function WalkInFields({
 }
 
 export default function TodayPage() {
+  const { classes: CLASSES } = useClasses()
+  const CLASS_OPTIONS = Object.entries(CLASSES).map(([key, cls]) => ({
+    value: key,
+    label: cls.name,
+  }))
+
   const toast = useToast()
   const [todayIso, setTodayIso] = useState<string>('')
   const [term, setTerm] = useState(getCurrentTerm())
@@ -430,16 +437,15 @@ export default function TodayPage() {
         </AdminCard>
       ) : (
         <>
-          {['baby-boogie', 'confidance-kids'].map((classType) => {
-            const typedClassType = classType as keyof typeof CLASSES
-            const classInfo = CLASSES[typedClassType]
+          {Object.keys(CLASSES).map((classType) => {
+            const classInfo = CLASSES[classType]
             const registeredForClass = bookings.filter((b) => b.class_type === classType)
             const walkInsForClass = walkIns.filter((w) => w.class_type === classType)
 
             return (
               <AdminCard key={classType}>
                 <h3 className="font-heading text-lg font-bold text-navy">
-                  {classInfo.name} . {classInfo.time}
+                  {classInfo?.name} . {classInfo?.time}
                 </h3>
                 <p className="mt-1 text-sm text-charcoal/60">
                   {registeredForClass.length} registered, {walkInsForClass.length} walk-ins

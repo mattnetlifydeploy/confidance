@@ -7,7 +7,8 @@ import { useAuth } from '@/lib/auth-context'
 import { getSupabase } from '@/lib/supabase'
 import { AnimatedBubbles } from '@/components/animated-bubbles'
 import { WaiverNudge } from '@/components/waiver-nudge'
-import { CLASSES, VENUE, CURRENT_TERM } from '@/lib/constants'
+import { CURRENT_TERM } from '@/lib/constants'
+import { useClasses } from '@/lib/use-classes'
 import { nextSessionDate, formatFullSession, whatToBring } from '@/lib/booking-display'
 import type { Child, Booking } from '@/lib/database.types'
 
@@ -22,6 +23,7 @@ type BannerRow = {
 }
 
 export default function DashboardPage() {
+  const { classes: CLASSES, venue: VENUE } = useClasses()
   const { user, profile, loading, signOut } = useAuth()
   const router = useRouter()
   const [showAddChild, setShowAddChild] = useState(false)
@@ -100,7 +102,7 @@ export default function DashboardPage() {
         return {
           ...booking,
           childName: child?.name || 'Unknown',
-          className: classInfo?.name || booking.class_type,
+          className: classInfo?.name ?? booking.class_type,
         }
       })
 
@@ -612,6 +614,7 @@ export default function DashboardPage() {
 }
 
 function BookingHistoryCard({ booking, onCancel }: { booking: PastBooking; onCancel?: (id: string) => void }) {
+  const { venue: VENUE } = useClasses()
   const [cancelling, setCancelling] = useState(false)
   const formattedDate = booking.created_at
     ? new Date(booking.created_at).toLocaleDateString('en-GB', {

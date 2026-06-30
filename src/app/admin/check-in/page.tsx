@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { getSupabase } from '@/lib/supabase'
-import { CLASSES, getCurrentTerm, getTermSessionDates } from '@/lib/constants'
+import { getCurrentTerm, getTermSessionDates } from '@/lib/constants'
 import type { ClassType } from '@/lib/constants'
 import { AdminSpinner, AdminPageHeader, AdminCard, StatusBadge, statusTone, AdminBanner, EmptyState } from '@/components/admin'
+import { useClasses } from '@/lib/use-classes'
 
 type RosterChild = {
   childId: string
@@ -16,6 +17,7 @@ type RosterChild = {
 }
 
 export default function CheckInPage() {
+  const { classes: CLASSES } = useClasses()
   const [term] = useState(getCurrentTerm())
   const [classType, setClassType] = useState<ClassType>('baby-boogie')
   const [sessionDate, setSessionDate] = useState<string>('')
@@ -264,7 +266,7 @@ export default function CheckInPage() {
       <AdminCard>
         <div className="mb-6">
           <h3 className="font-heading text-lg font-semibold">
-            {CLASSES[classType].name} . {formattedDateLong}
+            {CLASSES[classType]?.name ?? classType} . {formattedDateLong}
           </h3>
           <p className="mt-1 text-sm text-charcoal-light">
             {checkedInCount} of {rosterCount} checked in
