@@ -56,7 +56,11 @@ export default function DashboardPage() {
     async function fetchChildren() {
       if (!user) return
       const supabase = getSupabase()
-      const { data } = await supabase.from('children').select('*').eq('parent_id', user.id)
+      const { data } = await supabase
+        .from('children')
+        .select('*')
+        .eq('parent_id', user.id)
+        .returns<Child[]>()
       setChildren(data || [])
       setChildrenLoading(false)
     }
@@ -74,6 +78,7 @@ export default function DashboardPage() {
         .select('*')
         .eq('parent_id', user.id)
         .order('created_at', { ascending: false })
+        .returns<Booking[]>()
 
       if (!bookingsData) {
         setPastBookingsLoading(false)
@@ -1000,7 +1005,7 @@ function AddChildModal({
     }
 
     if (data) {
-      onAdded(data)
+      onAdded(data as Child)
     }
   }
 
