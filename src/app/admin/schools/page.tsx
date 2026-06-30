@@ -3,26 +3,42 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabase } from '@/lib/supabase'
-import type { School, EnquiryStatus } from '@/lib/schools-schema'
+import type { School } from '@/lib/schools-schema'
+import {
+  AdminCard,
+  AdminPageHeader,
+  Button,
+  Modal,
+  FormField,
+  Input,
+  Select,
+  StatusBadge,
+  EmptyState,
+  AdminSpinner,
+  useToast,
+} from '@/components/admin'
+
+const EMPTY_FORM = {
+  name: '',
+  address: '',
+  postcode: '',
+  area: '',
+  contactName: '',
+  contactEmail: '',
+  contactPhone: '',
+  schoolType: 'primary',
+}
 
 export default function SchoolsPage() {
   const router = useRouter()
+  const toast = useToast()
   const [schools, setSchools] = useState<School[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
 
-  const [showForm, setShowForm] = useState(false)
-  const [formData, setFormData] = useState({
-    name: '',
-    address: '',
-    postcode: '',
-    area: '',
-    contactName: '',
-    contactEmail: '',
-    contactPhone: '',
-    schoolType: 'primary',
-  })
+  const [formOpen, setFormOpen] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [formData, setFormData] = useState(EMPTY_FORM)
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
@@ -60,11 +76,36 @@ export default function SchoolsPage() {
     }
   }
 
+  const openCreate = () => {
+    setEditingId(null)
+    setFormData(EMPTY_FORM)
+    setFormOpen(true)
+  }
+
+  const openEdit = (school: School) => {
+    setEditingId(school.id)
+    setFormData({
+      name: school.name,
+      address: school.address || '',
+      postcode: school.postcode || '',
+      area: school.area || '',
+      contactName: school.contact_name || '',
+      contactEmail: school.contact_email || '',
+      contactPhone: school.contact_phone || '',
+      schoolType: school.school_type || 'primary',
+    })
+    setFormOpen(true)
+  }
+
+  const closeForm = () => {
+    setFormOpen(false)
+    setEditingId(null)
+    setFormData(EMPTY_FORM)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
-    setError(null)
-    setSuccess(null)
 
     try {
       const supabase = getSupabase()
@@ -83,8 +124,10 @@ export default function SchoolsPage() {
         schoolType: formData.schoolType || null,
       }
 
-      const res = await fetch('/api/admin/schools', {
-        method: 'POST',
+      const url = editingId ? `/api/admin/schools/${editingId}` : '/api/admin/schools'
+      const method = editingId ? 'PATCH' : 'POST'
+      const res = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -94,33 +137,20 @@ export default function SchoolsPage() {
 
       if (!res.ok) {
         const json = await res.json()
-        throw new Error(json.error || 'Failed to create school')
+        throw new Error(json.error || 'Failed to save school')
       }
 
-      setSuccess('School created successfully')
-      setFormData({
-        name: '',
-        address: '',
-        postcode: '',
-        area: '',
-        contactName: '',
-        contactEmail: '',
-        contactPhone: '',
-        schoolType: 'primary',
-      })
-      setShowForm(false)
+      toast.success(editingId ? 'School updated' : 'School created')
+      closeForm()
       await loadSchools()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error')
+      toast.error(err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setSubmitting(false)
     }
   }
 
   const toggleActive = async (school: School) => {
-    setError(null)
-    setSuccess(null)
-
     try {
       const supabase = getSupabase()
       const { data: { session } } = await supabase.auth.getSession()
@@ -141,176 +171,72 @@ export default function SchoolsPage() {
         throw new Error(json.error || 'Failed to update school')
       }
 
-      setSuccess(`School ${!school.active ? 'activated' : 'deactivated'}`)
+      toast.success(`School ${!school.active ? 'activated' : 'deactivated'}`)
       await loadSchools()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error')
+      toast.error(err instanceof Error ? err.message : 'Unknown error')
     }
   }
 
   return (
     <div className="space-y-6">
-      <div className="card-bezel rounded-3xl bg-white p-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="font-heading text-xl font-bold text-navy">Schools</h2>
-            <p className="mt-2 text-sm text-charcoal/60">Manage all school venues and contacts</p>
-          </div>
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="btn-primary rounded-xl px-6 py-2 text-sm"
-          >
-            {showForm ? 'Cancel' : 'Add School'}
-          </button>
-        </div>
+      <AdminPageHeader
+        title="Schools"
+        description="Manage all school venues and contacts"
+        actions={<Button onClick={openCreate}>Add school</Button>}
+      />
 
+      <AdminCard>
         {error && (
-          <div className="mt-4 rounded-lg bg-error/10 p-3 text-sm text-error">{error}</div>
-        )}
-        {success && (
-          <div className="mt-4 rounded-lg bg-success/10 p-3 text-sm text-success">{success}</div>
-        )}
-
-        {showForm && (
-          <form onSubmit={handleSubmit} className="mt-6 space-y-4 border-t border-charcoal/10 pt-6">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium text-charcoal">School name *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-charcoal/20 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal"
-                  placeholder="Primary School Name"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-charcoal">School type</label>
-                <select
-                  value={formData.schoolType}
-                  onChange={(e) => setFormData({ ...formData, schoolType: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-charcoal/20 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal"
-                >
-                  <option value="primary">Primary</option>
-                  <option value="secondary">Secondary</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-charcoal">Address</label>
-                <input
-                  type="text"
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-charcoal/20 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal"
-                  placeholder="Street address"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-charcoal">Postcode</label>
-                <input
-                  type="text"
-                  value={formData.postcode}
-                  onChange={(e) => setFormData({ ...formData, postcode: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-charcoal/20 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal"
-                  placeholder="AB12 3CD"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-charcoal">Area</label>
-                <input
-                  type="text"
-                  value={formData.area}
-                  onChange={(e) => setFormData({ ...formData, area: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-charcoal/20 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal"
-                  placeholder="District/region"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-charcoal">Contact name</label>
-                <input
-                  type="text"
-                  value={formData.contactName}
-                  onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-charcoal/20 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal"
-                  placeholder="Jane Doe"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-charcoal">Email</label>
-                <input
-                  type="email"
-                  value={formData.contactEmail}
-                  onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-charcoal/20 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal"
-                  placeholder="contact@school.co.uk"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-charcoal">Phone</label>
-                <input
-                  type="tel"
-                  value={formData.contactPhone}
-                  onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-charcoal/20 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal"
-                  placeholder="01632 960000"
-                />
-              </div>
-            </div>
-            <div className="flex gap-3 pt-4">
-              <button
-                type="submit"
-                disabled={submitting || !formData.name.trim()}
-                className="btn-primary rounded-lg px-6 py-2 text-sm disabled:opacity-50"
-              >
-                {submitting ? 'Creating...' : 'Create school'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                className="btn-secondary rounded-lg px-6 py-2 text-sm"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
+          <div className="mb-4 rounded-lg bg-error/10 p-3 text-sm text-error">{error}</div>
         )}
 
         {loading ? (
-          <div className="mt-6 flex justify-center py-8 text-sm text-charcoal/60">Loading schools...</div>
+          <div className="flex justify-center py-10">
+            <AdminSpinner />
+          </div>
         ) : schools.length === 0 ? (
-          <div className="mt-6 flex justify-center py-8 text-sm text-charcoal/60">No schools yet. Add one to get started.</div>
+          <EmptyState
+            title="No schools yet"
+            description="Add a school to start managing venues and contacts."
+            action={<Button onClick={openCreate}>Add school</Button>}
+          />
         ) : (
-          <div className="mt-6 overflow-x-auto">
+          <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-charcoal/10">
-                  <th className="text-left px-4 py-3 font-medium text-charcoal">Name</th>
-                  <th className="text-left px-4 py-3 font-medium text-charcoal">Area</th>
-                  <th className="text-left px-4 py-3 font-medium text-charcoal">Contact</th>
-                  <th className="text-left px-4 py-3 font-medium text-charcoal">Email</th>
-                  <th className="text-center px-4 py-3 font-medium text-charcoal">Status</th>
+                  <th className="px-4 py-3 text-left font-medium text-charcoal">Name</th>
+                  <th className="px-4 py-3 text-left font-medium text-charcoal">Area</th>
+                  <th className="px-4 py-3 text-left font-medium text-charcoal">Contact</th>
+                  <th className="px-4 py-3 text-left font-medium text-charcoal">Email</th>
+                  <th className="px-4 py-3 text-center font-medium text-charcoal">Status</th>
+                  <th className="px-4 py-3 text-right font-medium text-charcoal">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {schools.map((school) => (
                   <tr key={school.id} className="border-b border-charcoal/5 hover:bg-pale/20">
-                    <td className="px-4 py-3 text-charcoal font-medium">{school.name}</td>
-                    <td className="px-4 py-3 text-charcoal/70">{school.area || '—'}</td>
-                    <td className="px-4 py-3 text-charcoal/70">{school.contact_name || '—'}</td>
-                    <td className="px-4 py-3 text-charcoal/70">{school.contact_email || '—'}</td>
+                    <td className="px-4 py-3 font-medium text-charcoal">{school.name}</td>
+                    <td className="px-4 py-3 text-charcoal/70">{school.area || '.'}</td>
+                    <td className="px-4 py-3 text-charcoal/70">{school.contact_name || '.'}</td>
+                    <td className="px-4 py-3 text-charcoal/70">{school.contact_email || '.'}</td>
                     <td className="px-4 py-3 text-center">
                       <button
                         onClick={() => toggleActive(school)}
-                        className={`inline-block rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                          school.active
-                            ? 'bg-success/20 text-success'
-                            : 'bg-charcoal/10 text-charcoal/60 hover:bg-charcoal/20'
-                        }`}
+                        title={school.active ? 'Deactivate' : 'Activate'}
+                        className="align-middle"
                       >
-                        {school.active ? 'Active' : 'Inactive'}
+                        <StatusBadge
+                          label={school.active ? 'Active' : 'Inactive'}
+                          tone={school.active ? 'success' : 'neutral'}
+                        />
                       </button>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Button variant="ghost" size="sm" onClick={() => openEdit(school)}>
+                        Edit
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -318,7 +244,89 @@ export default function SchoolsPage() {
             </table>
           </div>
         )}
-      </div>
+      </AdminCard>
+
+      <Modal open={formOpen} onClose={closeForm} title={editingId ? 'Edit school' : 'Add school'}>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <FormField label="School name *">
+              <Input
+                type="text"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Primary School Name"
+              />
+            </FormField>
+            <FormField label="School type">
+              <Select
+                value={formData.schoolType}
+                onChange={(e) => setFormData({ ...formData, schoolType: e.target.value })}
+              >
+                <option value="primary">Primary</option>
+                <option value="secondary">Secondary</option>
+                <option value="other">Other</option>
+              </Select>
+            </FormField>
+            <FormField label="Address">
+              <Input
+                type="text"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                placeholder="Street address"
+              />
+            </FormField>
+            <FormField label="Postcode">
+              <Input
+                type="text"
+                value={formData.postcode}
+                onChange={(e) => setFormData({ ...formData, postcode: e.target.value })}
+                placeholder="AB12 3CD"
+              />
+            </FormField>
+            <FormField label="Area">
+              <Input
+                type="text"
+                value={formData.area}
+                onChange={(e) => setFormData({ ...formData, area: e.target.value })}
+                placeholder="District/region"
+              />
+            </FormField>
+            <FormField label="Contact name">
+              <Input
+                type="text"
+                value={formData.contactName}
+                onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
+                placeholder="Jane Doe"
+              />
+            </FormField>
+            <FormField label="Email">
+              <Input
+                type="email"
+                value={formData.contactEmail}
+                onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
+                placeholder="contact@school.co.uk"
+              />
+            </FormField>
+            <FormField label="Phone">
+              <Input
+                type="tel"
+                value={formData.contactPhone}
+                onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
+                placeholder="01632 960000"
+              />
+            </FormField>
+          </div>
+          <div className="flex gap-3 pt-2">
+            <Button type="submit" loading={submitting} disabled={!formData.name.trim()}>
+              {editingId ? 'Save changes' : 'Create school'}
+            </Button>
+            <Button type="button" variant="secondary" onClick={closeForm}>
+              Cancel
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   )
 }

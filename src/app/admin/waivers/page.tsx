@@ -1,7 +1,21 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { marked } from 'marked'
 import { getSupabase } from '@/lib/supabase'
+import {
+  AdminCard,
+  AdminPageHeader,
+  Button,
+  Modal,
+  ConfirmDialog,
+  FormField,
+  Input,
+  Textarea,
+  EmptyState,
+  AdminSpinner,
+  useToast,
+} from '@/components/admin'
 
 type WaiverRow = {
   id: string
@@ -11,31 +25,49 @@ type WaiverRow = {
   created_at: string
 }
 
-export default function WaiversPage() {
-  const [form, setForm] = useState({
-    title: '',
-    bodyMd: '',
-    publishedAt: '',
+const EMPTY_FORM = { title: '', bodyMd: '', publishedAt: '' }
+
+// ISO -> value for <input type="datetime-local">
+function toLocalInput(iso: string): string {
+  const d = new Date(iso)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function formatPublished(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-GB', {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
   })
-  const [submitting, setSubmitting] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+}
+
+export default function WaiversPage() {
+  const toast = useToast()
 
   const [waivers, setWaivers] = useState<WaiverRow[]>([])
   const [waiversLoading, setWaiversLoading] = useState(true)
 
-  // Fetch existing waivers
+  const [formOpen, setFormOpen] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [form, setForm] = useState(EMPTY_FORM)
+  const [submitting, setSubmitting] = useState(false)
+
+  const [viewing, setViewing] = useState<WaiverRow | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<WaiverRow | null>(null)
+  const [deleting, setDeleting] = useState(false)
+
   const fetchWaivers = async () => {
+    setWaiversLoading(true)
     try {
       const supabase = getSupabase()
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.access_token) {
-        throw new Error('Not authenticated')
-      }
+      if (!session?.access_token) throw new Error('Not authenticated')
 
       const res = await fetch('/api/admin/waivers', {
         headers: { Authorization: `Bearer ${session.access_token}` },
       })
-
       if (res.ok) {
         const data = await res.json()
         setWaivers(data.waivers || [])
@@ -51,9 +83,31 @@ export default function WaiversPage() {
     fetchWaivers()
   }, [])
 
+  const openCreate = () => {
+    setEditingId(null)
+    setForm(EMPTY_FORM)
+    setFormOpen(true)
+  }
+
+  const openEdit = (waiver: WaiverRow) => {
+    setEditingId(waiver.id)
+    setForm({
+      title: waiver.title,
+      bodyMd: waiver.body_md,
+      publishedAt: waiver.published_at ? toLocalInput(waiver.published_at) : '',
+    })
+    setFormOpen(true)
+  }
+
+  const closeForm = () => {
+    setFormOpen(false)
+    setEditingId(null)
+    setForm(EMPTY_FORM)
+  }
+
   const handleSubmit = async () => {
     if (!form.title.trim() || !form.bodyMd.trim()) {
-      setMessage({ type: 'error', text: 'Title and body required' })
+      toast.error('Title and body required')
       return
     }
 
@@ -61,140 +115,203 @@ export default function WaiversPage() {
     try {
       const supabase = getSupabase()
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.access_token) {
-        throw new Error('Not authenticated')
-      }
+      if (!session?.access_token) throw new Error('Not authenticated')
 
-      const publishedAt = form.publishedAt ? new Date(form.publishedAt).toISOString() : undefined
+      const publishedAt = form.publishedAt
+        ? new Date(form.publishedAt).toISOString()
+        : undefined
 
-      const res = await fetch('/api/admin/waivers', {
-        method: 'POST',
+      const url = editingId ? `/api/admin/waivers/${editingId}` : '/api/admin/waivers'
+      const method = editingId ? 'PATCH' : 'POST'
+      const res = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
+          Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({
-          title: form.title,
-          bodyMd: form.bodyMd,
-          publishedAt,
-        }),
+        body: JSON.stringify({ title: form.title, bodyMd: form.bodyMd, publishedAt }),
       })
 
       if (!res.ok) {
         const errData = await res.json()
-        throw new Error(errData.error || 'Failed to publish waiver')
+        throw new Error(errData.error || 'Failed to save waiver')
       }
 
-      setMessage({ type: 'success', text: 'Waiver published' })
-      setForm({ title: '', bodyMd: '', publishedAt: '' })
-      setTimeout(() => setMessage(null), 3000)
-
-      // Refresh waiver list
+      toast.success(editingId ? 'Waiver updated' : 'Waiver published')
+      closeForm()
       await fetchWaivers()
     } catch (err) {
-      setMessage({
-        type: 'error',
-        text: err instanceof Error ? err.message : 'Failed to publish waiver',
-      })
+      toast.error(err instanceof Error ? err.message : 'Failed to save waiver')
     } finally {
       setSubmitting(false)
     }
   }
 
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
+    try {
+      const supabase = getSupabase()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) throw new Error('Not authenticated')
+
+      const res = await fetch(`/api/admin/waivers/${deleteTarget.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+
+      if (!res.ok) {
+        const errData = await res.json()
+        throw new Error(errData.error || 'Failed to delete waiver')
+      }
+
+      toast.success('Waiver deleted')
+      setDeleteTarget(null)
+      await fetchWaivers()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete waiver')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
-      {/* Publish Waiver Card */}
-      <div className="rounded-3xl bg-white p-8 shadow-sm card-glow">
-        <h2 className="font-heading text-xl font-bold">Publish Waiver</h2>
-        <p className="mt-2 text-sm text-warm-gray">
-          Create or update waivers that parents must sign
-        </p>
+      <AdminPageHeader
+        title="Waivers"
+        description="Create and manage the waivers parents must sign"
+        actions={<Button onClick={openCreate}>Publish waiver</Button>}
+      />
 
-        <div className="mt-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium">Title</label>
-            <input
+      <AdminCard>
+        <h3 className="font-heading text-lg font-bold text-navy">Published waivers</h3>
+
+        {waiversLoading ? (
+          <div className="flex justify-center py-10">
+            <AdminSpinner />
+          </div>
+        ) : waivers.length === 0 ? (
+          <div className="mt-6">
+            <EmptyState
+              title="No waivers yet"
+              description="Publish a waiver to make it available for parents to sign."
+              action={<Button onClick={openCreate}>Publish waiver</Button>}
+            />
+          </div>
+        ) : (
+          <div className="mt-6 space-y-3">
+            {waivers.map((waiver) => (
+              <div
+                key={waiver.id}
+                className="flex flex-col gap-3 rounded-2xl border border-charcoal/10 p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div>
+                  <h4 className="font-heading text-sm font-bold text-navy">{waiver.title}</h4>
+                  <p className="mt-1 text-xs text-charcoal/60">
+                    Published {formatPublished(waiver.published_at)}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => setViewing(waiver)}>
+                    View
+                  </Button>
+                  <Button variant="secondary" size="sm" onClick={() => openEdit(waiver)}>
+                    Edit
+                  </Button>
+                  <Button variant="danger" size="sm" onClick={() => setDeleteTarget(waiver)}>
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </AdminCard>
+
+      {/* Create / Edit modal */}
+      <Modal
+        open={formOpen}
+        onClose={closeForm}
+        title={editingId ? 'Edit waiver' : 'Publish waiver'}
+      >
+        <div className="space-y-4">
+          <FormField label="Title">
+            <Input
               type="text"
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               placeholder="Waiver title (max 200 characters)"
               maxLength={200}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm"
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-sm font-medium">Body (Markdown)</label>
-            <textarea
+          <FormField label="Body (Markdown)" hint="Supports Markdown. Max 20,000 characters.">
+            <Textarea
               value={form.bodyMd}
               onChange={(e) => setForm({ ...form, bodyMd: e.target.value })}
-              placeholder="Waiver body in Markdown (max 20000 characters)"
+              placeholder="Waiver body in Markdown"
               maxLength={20000}
-              rows={8}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm font-mono"
+              rows={10}
+              className="font-mono"
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-sm font-medium">Publish Date (Optional)</label>
-            <input
+          <FormField
+            label="Publish date (optional)"
+            hint="Leave empty to publish immediately."
+          >
+            <Input
               type="datetime-local"
               value={form.publishedAt}
               onChange={(e) => setForm({ ...form, publishedAt: e.target.value })}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm"
             />
-            <p className="mt-1 text-xs text-warm-gray">Leave empty to publish immediately</p>
+          </FormField>
+
+          <div className="flex gap-3 pt-2">
+            <Button onClick={handleSubmit} loading={submitting}>
+              {editingId ? 'Save changes' : 'Publish waiver'}
+            </Button>
+            <Button variant="secondary" onClick={closeForm}>
+              Cancel
+            </Button>
           </div>
-
-          {message && (
-            <div className={`rounded-lg px-4 py-3 text-sm ${
-              message.type === 'success'
-                ? 'bg-green-50 text-green-800'
-                : 'bg-red-50 text-red-800'
-            }`}>
-              {message.text}
-            </div>
-          )}
-
-          <button
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="w-full rounded-lg bg-coral px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-          >
-            {submitting ? 'Publishing...' : 'Publish Waiver'}
-          </button>
         </div>
-      </div>
+      </Modal>
 
-      {/* Waivers List */}
-      <div className="rounded-3xl bg-white p-8 shadow-sm card-glow">
-        <h2 className="font-heading text-xl font-bold">Published Waivers</h2>
-
-        {waiversLoading ? (
-          <p className="mt-4 text-sm text-warm-gray">Loading waivers...</p>
-        ) : waivers.length === 0 ? (
-          <p className="mt-4 text-sm text-warm-gray">No waivers published yet</p>
-        ) : (
-          <div className="mt-6 space-y-4">
-            {waivers.map((waiver) => (
-              <div
-                key={waiver.id}
-                className="rounded-lg border border-gray-200 p-4"
-              >
-                <h3 className="font-heading text-sm font-bold">{waiver.title}</h3>
-                <p className="mt-1 text-xs text-warm-gray">
-                  Published {new Date(waiver.published_at).toLocaleDateString('en-GB', {
-                    weekday: 'short',
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                  })}
-                </p>
-              </div>
-            ))}
-          </div>
+      {/* View modal: rendered Markdown */}
+      <Modal
+        open={viewing !== null}
+        onClose={() => setViewing(null)}
+        title={viewing?.title}
+        size="xl"
+      >
+        {viewing && (
+          <>
+            <p className="mb-4 text-xs text-charcoal/60">
+              Published {formatPublished(viewing.published_at)}
+            </p>
+            <div
+              className="waiver-body space-y-3 text-sm leading-relaxed text-charcoal/80"
+              dangerouslySetInnerHTML={{ __html: marked.parse(viewing.body_md) as string }}
+            />
+          </>
         )}
-      </div>
+      </Modal>
+
+      {/* Delete confirmation */}
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete waiver"
+        message={
+          deleteTarget
+            ? `Delete "${deleteTarget.title}"? This cannot be undone.`
+            : undefined
+        }
+        confirmLabel="Delete"
+        loading={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   )
 }

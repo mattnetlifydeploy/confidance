@@ -5,6 +5,19 @@ import { getSupabase } from '@/lib/supabase'
 import { CLASSES } from '@/lib/constants'
 import type { Booking, Child, Profile } from '@/lib/database.types'
 import type { ClassType } from '@/lib/constants'
+import {
+  AdminCard,
+  AdminPageHeader,
+  Button,
+  Modal,
+  FormField,
+  Input,
+  Textarea,
+  StatusBadge,
+  EmptyState,
+  AdminSpinner,
+  useToast,
+} from '@/components/admin'
 
 type ChildWithBookings = {
   child: Child
@@ -17,13 +30,27 @@ type Family = {
 }
 
 export default function FamiliesPage() {
+  const toast = useToast()
   const [families, setFamilies] = useState<Family[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [expandedChildIds, setExpandedChildIds] = useState<Set<string>>(new Set())
-  const [savingNotes, setSavingNotes] = useState<Map<string, boolean>>(new Map())
-  const [noteErrors, setNoteErrors] = useState<Map<string, string>>(new Map())
+  const [savingNotes, setSavingNotes] = useState<Set<string>>(new Set())
+
+  const [editParent, setEditParent] = useState<Profile | null>(null)
+  const [parentForm, setParentForm] = useState({ fullName: '', phone: '' })
+  const [parentSaving, setParentSaving] = useState(false)
+
+  const [editChild, setEditChild] = useState<Child | null>(null)
+  const [childForm, setChildForm] = useState({ name: '', age: '', medicalInfo: '' })
+  const [childSaving, setChildSaving] = useState(false)
+
+  const getToken = async () => {
+    const { data: { session } } = await getSupabase().auth.getSession()
+    if (!session?.access_token) throw new Error('Not authenticated')
+    return session.access_token
+  }
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -36,13 +63,9 @@ export default function FamiliesPage() {
         .select('*')
         .order('full_name', { ascending: true })
 
-      const childrenRes = await supabase
-        .from('children')
-        .select('*')
+      const childrenRes = await supabase.from('children').select('*')
 
-      const bookingsRes = await supabase
-        .from('bookings')
-        .select('*')
+      const bookingsRes = await supabase.from('bookings').select('*')
 
       if (profilesRes.error) throw new Error(profilesRes.error.message)
       if (childrenRes.error) throw new Error(childrenRes.error.message)
@@ -55,23 +78,23 @@ export default function FamiliesPage() {
       const childrenByParent = new Map<string, Child[]>()
       const bookingsByChild = new Map<string, Booking[]>()
 
-      children.forEach(c => {
+      children.forEach((c) => {
         if (!childrenByParent.has(c.parent_id)) {
           childrenByParent.set(c.parent_id, [])
         }
         childrenByParent.get(c.parent_id)!.push(c)
       })
 
-      bookings.forEach(b => {
+      bookings.forEach((b) => {
         if (!bookingsByChild.has(b.child_id)) {
           bookingsByChild.set(b.child_id, [])
         }
         bookingsByChild.get(b.child_id)!.push(b)
       })
 
-      const familiesList: Family[] = profiles.map(parent => ({
+      const familiesList: Family[] = profiles.map((parent) => ({
         parent,
-        children: (childrenByParent.get(parent.id) || []).map(child => ({
+        children: (childrenByParent.get(parent.id) || []).map((child) => ({
           child,
           bookings: bookingsByChild.get(child.id) || [],
         })),
@@ -93,13 +116,15 @@ export default function FamiliesPage() {
     if (!search.trim()) return families
 
     const q = search.toLowerCase()
-    return families.filter(fam => {
-      if (fam.parent.full_name.toLowerCase().includes(q) ||
-          fam.parent.email.toLowerCase().includes(q) ||
-          (fam.parent.phone?.toLowerCase().includes(q) ?? false)) {
+    return families.filter((fam) => {
+      if (
+        fam.parent.full_name.toLowerCase().includes(q) ||
+        fam.parent.email.toLowerCase().includes(q) ||
+        (fam.parent.phone?.toLowerCase().includes(q) ?? false)
+      ) {
         return true
       }
-      return fam.children.some(cw => cw.child.name.toLowerCase().includes(q))
+      return fam.children.some((cw) => cw.child.name.toLowerCase().includes(q))
     })
   }, [families, search])
 
@@ -114,20 +139,14 @@ export default function FamiliesPage() {
   }
 
   const saveNotes = async (parentId: string, notes: string | null) => {
-    setSavingNotes(prev => new Map(prev).set(parentId, true))
-    setNoteErrors(prev => new Map(prev).set(parentId, ''))
-
+    setSavingNotes((prev) => new Set(prev).add(parentId))
     try {
-      const token = localStorage.getItem('supabase.auth.token')
-      if (!token) {
-        throw new Error('Not authenticated')
-      }
-
+      const token = await getToken()
       const res = await fetch('/api/admin/family-notes', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${JSON.parse(token).session.access_token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ parentId, notes: notes || null }),
       })
@@ -136,160 +155,262 @@ export default function FamiliesPage() {
         const data = await res.json()
         throw new Error(data.error || 'Failed to save notes')
       }
-
-      setSavingNotes(prev => new Map(prev).set(parentId, false))
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to save notes'
-      setNoteErrors(prev => new Map(prev).set(parentId, errorMsg))
-      setSavingNotes(prev => new Map(prev).set(parentId, false))
+      toast.error(err instanceof Error ? err.message : 'Failed to save notes')
+    } finally {
+      setSavingNotes((prev) => {
+        const next = new Set(prev)
+        next.delete(parentId)
+        return next
+      })
+    }
+  }
+
+  const openEditParent = (parent: Profile) => {
+    setEditParent(parent)
+    setParentForm({ fullName: parent.full_name, phone: parent.phone || '' })
+  }
+
+  const handleParentSave = async () => {
+    if (!editParent) return
+    if (!parentForm.fullName.trim()) {
+      toast.error('Name is required')
+      return
+    }
+    setParentSaving(true)
+    try {
+      const token = await getToken()
+      const res = await fetch(`/api/admin/families/profile/${editParent.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          fullName: parentForm.fullName,
+          phone: parentForm.phone || null,
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to update parent')
+      }
+      toast.success('Parent updated')
+      setEditParent(null)
+      await loadData()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update parent')
+    } finally {
+      setParentSaving(false)
+    }
+  }
+
+  const openEditChild = (child: Child) => {
+    setEditChild(child)
+    setChildForm({
+      name: child.name,
+      age: String(child.age),
+      medicalInfo: child.medical_info || '',
+    })
+  }
+
+  const handleChildSave = async () => {
+    if (!editChild) return
+    if (!childForm.name.trim()) {
+      toast.error('Name is required')
+      return
+    }
+    const ageNum = parseInt(childForm.age)
+    if (Number.isNaN(ageNum)) {
+      toast.error('Valid age is required')
+      return
+    }
+    setChildSaving(true)
+    try {
+      const token = await getToken()
+      const res = await fetch(`/api/admin/families/child/${editChild.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: childForm.name,
+          age: ageNum,
+          medicalInfo: childForm.medicalInfo || null,
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to update child')
+      }
+      toast.success('Child updated')
+      setEditChild(null)
+      await loadData()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update child')
+    } finally {
+      setChildSaving(false)
     }
   }
 
   if (loading) {
     return (
-      <div className="mt-6 flex justify-center rounded-3xl bg-white p-8 shadow-sm card-glow">
-        <div className="flex gap-2">
-          <span className="dancing-dot bg-coral" />
-          <span className="dancing-dot bg-lilac" />
-          <span className="dancing-dot bg-gold" />
-        </div>
-      </div>
+      <AdminCard className="mt-6 flex justify-center">
+        <AdminSpinner />
+      </AdminCard>
     )
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="font-heading text-xl font-bold">Families</h2>
-        <p className="mt-1 text-sm text-warm-gray">Every parent and their children. Click a family to see booking history.</p>
-      </div>
+      <AdminPageHeader
+        title="Families"
+        description="Every parent and their children. Click a family to see booking history."
+      />
 
       {error && (
-        <div className="rounded-3xl bg-red-50 p-6 shadow-sm card-glow">
-          <p className="text-sm text-red-700">{error}</p>
-        </div>
+        <div className="rounded-lg bg-error/10 p-3 text-sm text-error">{error}</div>
       )}
 
-      <input
+      <Input
         type="text"
         placeholder="Search parent name, email, phone, or child name"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="w-full rounded-xl border border-border bg-white px-4 py-3 text-sm focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/20"
       />
 
       <div className="space-y-4">
         {filteredFamilies.length === 0 ? (
-          <div className="rounded-3xl bg-white p-6 shadow-sm card-glow text-center">
-            <p className="text-sm text-warm-gray">No families match your search.</p>
-          </div>
+          <AdminCard>
+            <EmptyState
+              title="No families found"
+              description="No families match your search."
+            />
+          </AdminCard>
         ) : (
-          filteredFamilies.map(fam => (
-            <div key={fam.parent.id} className="rounded-3xl bg-white p-6 shadow-sm card-glow">
-              <div className="flex flex-wrap items-center gap-3 border-b border-border pb-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-coral/20 to-lilac/20">
-                  <span className="font-heading text-sm font-bold text-coral">
+          filteredFamilies.map((fam) => (
+            <AdminCard key={fam.parent.id}>
+              <div className="flex flex-wrap items-center gap-3 border-b border-charcoal/10 pb-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-teal/20 to-navy/20">
+                  <span className="font-heading text-sm font-bold text-teal">
                     {fam.parent.full_name.charAt(0).toUpperCase()}
                   </span>
                 </div>
                 <div className="flex-1">
-                  <p className="font-heading text-base font-bold">{fam.parent.full_name}</p>
-                  <p className="text-sm text-warm-gray">
+                  <p className="font-heading text-base font-bold text-navy">
+                    {fam.parent.full_name}
+                  </p>
+                  <p className="text-sm text-charcoal/60">
                     {fam.parent.email} . {fam.parent.phone || 'No phone'}
                   </p>
                 </div>
-                <span className="inline-block rounded-full bg-cream px-3 py-1 text-xs font-600 text-warm-gray">
-                  {fam.children.length} child{fam.children.length !== 1 ? 'ren' : ''}
-                </span>
+                <StatusBadge
+                  label={`${fam.children.length} child${fam.children.length !== 1 ? 'ren' : ''}`}
+                  tone="neutral"
+                />
+                <Button variant="ghost" size="sm" onClick={() => openEditParent(fam.parent)}>
+                  Edit
+                </Button>
               </div>
 
-              <div className="mt-4 space-y-4">
-                <div>
-                  <label className="block text-xs font-600 text-warm-gray mb-2">Admin Notes</label>
-                  <textarea
-                    value={fam.parent.admin_notes || ''}
-                    onChange={(e) => {
-                      setFamilies(families.map(f =>
+              <div className="mt-4">
+                <label className="mb-2 block text-xs font-semibold text-charcoal/60">
+                  Admin notes
+                </label>
+                <Textarea
+                  value={fam.parent.admin_notes || ''}
+                  onChange={(e) => {
+                    setFamilies(
+                      families.map((f) =>
                         f.parent.id === fam.parent.id
                           ? { ...f, parent: { ...f.parent, admin_notes: e.target.value } }
-                          : f
-                      ))
-                    }}
-                    onBlur={() => saveNotes(fam.parent.id, fam.parent.admin_notes || null)}
-                    placeholder="Add internal notes about this family..."
-                    className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm placeholder-warm-gray/50 focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/20 resize-none"
-                    rows={3}
-                  />
-                  {noteErrors.get(fam.parent.id) && (
-                    <p className="mt-1 text-xs text-red-600">{noteErrors.get(fam.parent.id)}</p>
-                  )}
-                  {savingNotes.get(fam.parent.id) && (
-                    <p className="mt-1 text-xs text-warm-gray">Saving...</p>
-                  )}
-                </div>
+                          : f,
+                      ),
+                    )
+                  }}
+                  onBlur={() => saveNotes(fam.parent.id, fam.parent.admin_notes || null)}
+                  placeholder="Add internal notes about this family..."
+                  rows={3}
+                  className="resize-none"
+                />
+                {savingNotes.has(fam.parent.id) && (
+                  <p className="mt-1 text-xs text-charcoal/50">Saving...</p>
+                )}
               </div>
 
               <div className="mt-4 space-y-3">
                 {fam.children.length === 0 ? (
-                  <p className="text-sm text-warm-gray italic">No children yet.</p>
+                  <p className="text-sm italic text-charcoal/50">No children yet.</p>
                 ) : (
-                  fam.children.map(cw => {
+                  fam.children.map((cw) => {
                     const isExpanded = expandedChildIds.has(cw.child.id)
                     return (
                       <div key={cw.child.id} className="rounded-2xl bg-cream/50 p-4">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <div className="flex-1">
-                            <p className="font-600">{cw.child.name}</p>
+                            <p className="font-semibold text-navy">{cw.child.name}</p>
+                            {cw.child.medical_info && (
+                              <p className="mt-0.5 text-xs text-charcoal/60">
+                                Medical: {cw.child.medical_info}
+                              </p>
+                            )}
                           </div>
-                          <div className="flex flex-shrink-0 gap-2">
-                            <span className="inline-block rounded-full bg-white px-2 py-0.5 text-xs font-600 text-warm-gray">
-                              Age {cw.child.age}
-                            </span>
-                            <span className="inline-block rounded-full bg-white px-2 py-0.5 text-xs font-600 text-warm-gray">
-                              {cw.bookings.length} booking{cw.bookings.length !== 1 ? 's' : ''}
-                            </span>
+                          <div className="flex flex-shrink-0 items-center gap-2">
+                            <StatusBadge label={`Age ${cw.child.age}`} tone="neutral" />
+                            <StatusBadge
+                              label={`${cw.bookings.length} booking${cw.bookings.length !== 1 ? 's' : ''}`}
+                              tone="neutral"
+                            />
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openEditChild(cw.child)}
+                            >
+                              Edit
+                            </Button>
                           </div>
                         </div>
                         {cw.bookings.length > 0 && (
                           <button
                             type="button"
                             onClick={() => toggleExpanded(cw.child.id)}
-                            className="mt-2 text-xs text-coral"
+                            className="mt-2 text-xs font-medium text-teal"
                           >
                             {isExpanded ? 'Hide history' : 'Show history'}
                           </button>
                         )}
                         {isExpanded && cw.bookings.length > 0 && (
-                          <div className="mt-3 space-y-2 border-t border-border pt-3">
-                            {cw.bookings.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map(b => {
-                              const classInfo = CLASSES[b.class_type as ClassType]
-                              const createdDate = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }).format(new Date(b.created_at))
-                              return (
-                                <div key={b.id} className="text-xs text-warm-gray">
-                                  <div className="flex justify-between">
-                                    <span>{createdDate} . {classInfo?.name || b.class_type}</span>
+                          <div className="mt-3 space-y-2 border-t border-charcoal/10 pt-3">
+                            {cw.bookings
+                              .slice()
+                              .sort(
+                                (a, b) =>
+                                  new Date(b.created_at).getTime() -
+                                  new Date(a.created_at).getTime(),
+                              )
+                              .map((b) => {
+                                const classInfo = CLASSES[b.class_type as ClassType]
+                                const createdDate = new Intl.DateTimeFormat('en-GB', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: '2-digit',
+                                }).format(new Date(b.created_at))
+                                return (
+                                  <div
+                                    key={b.id}
+                                    className="flex items-center justify-between text-xs text-charcoal/70"
+                                  >
+                                    <span>
+                                      {createdDate} . {classInfo?.name || b.class_type}
+                                    </span>
                                     <div className="flex gap-1">
-                                      <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-600 ${
-                                        b.booking_type === 'term' ? 'bg-coral/15 text-coral' :
-                                        b.booking_type === 'single' ? 'bg-lilac/15 text-lilac' :
-                                        b.booking_type === 'trial' ? 'bg-gold/15 text-gold' :
-                                        'bg-warm-gray/15 text-warm-gray'
-                                      }`}>
-                                        {b.booking_type}
-                                      </span>
-                                      <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-600 ${
-                                        b.status === 'confirmed' ? 'bg-green-100 text-green-700' :
-                                        b.status === 'pending' ? 'bg-gold/15 text-gold' :
-                                        b.status === 'cancelled' ? 'bg-red-100 text-red-600' :
-                                        'bg-warm-gray/15 text-warm-gray'
-                                      }`}>
-                                        {b.status}
-                                      </span>
+                                      <StatusBadge label={b.booking_type} tone="teal" />
+                                      <StatusBadge label={b.status} status={b.status} />
                                     </div>
                                   </div>
-                                </div>
-                              )
-                            })}
+                                )
+                              })}
                           </div>
                         )}
                       </div>
@@ -297,10 +418,87 @@ export default function FamiliesPage() {
                   })
                 )}
               </div>
-            </div>
+            </AdminCard>
           ))
         )}
       </div>
+
+      {/* Edit parent */}
+      <Modal
+        open={editParent !== null}
+        onClose={() => setEditParent(null)}
+        title="Edit parent"
+        size="md"
+      >
+        <div className="space-y-4">
+          <FormField label="Full name *">
+            <Input
+              type="text"
+              value={parentForm.fullName}
+              onChange={(e) => setParentForm({ ...parentForm, fullName: e.target.value })}
+            />
+          </FormField>
+          <FormField label="Phone">
+            <Input
+              type="tel"
+              value={parentForm.phone}
+              onChange={(e) => setParentForm({ ...parentForm, phone: e.target.value })}
+              placeholder="Optional"
+            />
+          </FormField>
+          <div className="flex gap-3 pt-2">
+            <Button onClick={handleParentSave} loading={parentSaving}>
+              Save changes
+            </Button>
+            <Button variant="secondary" onClick={() => setEditParent(null)}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Edit child */}
+      <Modal
+        open={editChild !== null}
+        onClose={() => setEditChild(null)}
+        title="Edit child"
+        size="md"
+      >
+        <div className="space-y-4">
+          <FormField label="Name *">
+            <Input
+              type="text"
+              value={childForm.name}
+              onChange={(e) => setChildForm({ ...childForm, name: e.target.value })}
+            />
+          </FormField>
+          <FormField label="Age *">
+            <Input
+              type="number"
+              min={0}
+              max={18}
+              value={childForm.age}
+              onChange={(e) => setChildForm({ ...childForm, age: e.target.value })}
+            />
+          </FormField>
+          <FormField label="Medical info" hint="Allergies, conditions, anything staff should know.">
+            <Textarea
+              value={childForm.medicalInfo}
+              onChange={(e) => setChildForm({ ...childForm, medicalInfo: e.target.value })}
+              placeholder="Optional"
+              rows={3}
+            />
+          </FormField>
+          <div className="flex gap-3 pt-2">
+            <Button onClick={handleChildSave} loading={childSaving}>
+              Save changes
+            </Button>
+            <Button variant="secondary" onClick={() => setEditChild(null)}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }
