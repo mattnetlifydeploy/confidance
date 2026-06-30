@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { FaqAccordion } from '@/components/faq-accordion'
+import { AnimatedBubbles } from '@/components/animated-bubbles'
 
 export const metadata: Metadata = {
   title: 'FAQs for Schools',
@@ -55,6 +56,7 @@ export default function FaqsPage() {
       <section className="relative overflow-hidden bg-navy pt-36 pb-28 text-white">
         <div className="blob absolute -right-32 -top-24 h-[520px] w-[520px] bg-teal/20 blur-3xl" />
         <div className="blob absolute -left-40 bottom-[-10rem] h-[480px] w-[480px] bg-teal-light/10 blur-3xl" />
+        <AnimatedBubbles tone="dark" count={9} />
 
         <div className="relative mx-auto max-w-6xl px-6">
           <div className="mx-auto max-w-2xl text-center">

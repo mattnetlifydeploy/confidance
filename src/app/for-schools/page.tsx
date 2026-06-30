@@ -3,6 +3,7 @@ import Image from 'next/image'
 import type { Metadata } from 'next'
 import { SchoolEnquiryForm } from '@/components/school-enquiry-form'
 import { PlayfulMotionBg } from '@/components/playful-motion-bg'
+import { AnimatedBubbles } from '@/components/animated-bubbles'
 
 export const metadata: Metadata = {
   title: 'For Schools',
@@ -53,6 +54,7 @@ export default function ForSchoolsPage() {
         <div className="blob absolute -right-32 -top-24 h-[520px] w-[520px] bg-teal/20 blur-3xl" />
         <div className="blob absolute -left-40 bottom-[-10rem] h-[480px] w-[480px] bg-teal-light/10 blur-3xl" />
         <PlayfulMotionBg variant="navy" />
+        <AnimatedBubbles tone="dark" count={9} />
         <div className="relative mx-auto max-w-6xl px-6">
           <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
             <div>

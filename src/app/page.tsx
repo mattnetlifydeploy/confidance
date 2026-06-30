@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import type { Metadata } from 'next'
 import { PlayfulMotionBg } from '@/components/playful-motion-bg'
+import { AnimatedBubbles } from '@/components/animated-bubbles'
 
 export const metadata: Metadata = {
   title: { absolute: 'Confidance | After-School Performing Arts Clubs in Schools' },
@@ -54,6 +55,7 @@ export default function Home() {
         <div className="blob absolute -left-40 bottom-[-12rem] h-[520px] w-[520px] bg-teal-light/10 blur-3xl" />
         <div className="absolute left-1/2 top-0 h-[1px] w-2/3 -translate-x-1/2 bg-gradient-to-r from-transparent via-teal/40 to-transparent" />
         <PlayfulMotionBg variant="navy" />
+        <AnimatedBubbles tone="dark" count={9} />
 
         <div className="relative mx-auto max-w-6xl px-6">
           <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
@@ -268,6 +270,7 @@ export default function Home() {
         <div className="blob absolute -left-32 top-1/2 h-80 w-80 -translate-y-1/2 bg-teal/10 blur-3xl" />
         <div className="blob absolute -right-24 bottom-[-6rem] h-72 w-72 bg-teal-light/10 blur-3xl" />
         <PlayfulMotionBg variant="light" />
+        <AnimatedBubbles tone="light" count={7} />
         <div className="relative mx-auto max-w-4xl px-6 text-center">
           <p className="reveal font-heading text-sm font-600 uppercase tracking-[0.2em] text-teal">Where we run</p>
           <h2 className="reveal mt-3 font-heading text-3xl font-bold text-navy md:text-4xl">
@@ -288,6 +291,7 @@ export default function Home() {
       <section className="section-padding relative overflow-hidden bg-navy text-white">
         <div className="blob absolute -right-32 -top-24 h-96 w-96 bg-teal/20 blur-3xl" />
         <div className="blob absolute -left-32 bottom-0 h-80 w-80 bg-teal-light/10 blur-3xl" />
+        <AnimatedBubbles tone="dark" count={8} />
         <div className="relative mx-auto max-w-2xl px-6 text-center">
           <p className="reveal font-heading text-sm font-600 uppercase tracking-[0.28em] text-teal-light">
             Inspire &middot; Empower &middot; Shine

@@ -19,14 +19,14 @@ type Shape = {
 // navy = on dark hero (light orbs), light = on pale/cream band (teal/navy orbs).
 const SHAPES: Record<Variant, Shape[]> = {
   navy: [
-    { top: '-6%', left: '4%', size: 360, rgb: '79, 168, 187', opacity: 0.12, keyframe: 'pmb-drift-a', duration: 13, delay: 0 },
-    { top: '46%', left: '80%', size: 300, rgb: '220, 235, 240', opacity: 0.07, keyframe: 'pmb-drift-b', duration: 11, delay: 1.4 },
-    { top: '70%', left: '20%', size: 240, rgb: '79, 168, 187', opacity: 0.06, keyframe: 'pmb-drift-c', duration: 14, delay: 0.8 },
+    { top: '-6%', left: '4%', size: 360, rgb: '79, 168, 187', opacity: 0.30, keyframe: 'pmb-drift-a', duration: 13, delay: 0 },
+    { top: '46%', left: '80%', size: 300, rgb: '220, 235, 240', opacity: 0.20, keyframe: 'pmb-drift-b', duration: 11, delay: 1.4 },
+    { top: '70%', left: '20%', size: 240, rgb: '79, 168, 187', opacity: 0.18, keyframe: 'pmb-drift-c', duration: 14, delay: 0.8 },
   ],
   light: [
-    { top: '-8%', left: '8%', size: 320, rgb: '46, 143, 163', opacity: 0.08, keyframe: 'pmb-drift-b', duration: 12, delay: 0 },
-    { top: '40%', left: '78%', size: 280, rgb: '23, 59, 76', opacity: 0.05, keyframe: 'pmb-drift-c', duration: 14, delay: 1.2 },
-    { top: '64%', left: '30%', size: 220, rgb: '46, 143, 163', opacity: 0.06, keyframe: 'pmb-drift-a', duration: 10, delay: 0.6 },
+    { top: '-8%', left: '8%', size: 320, rgb: '46, 143, 163', opacity: 0.22, keyframe: 'pmb-drift-b', duration: 12, delay: 0 },
+    { top: '40%', left: '78%', size: 280, rgb: '23, 59, 76', opacity: 0.15, keyframe: 'pmb-drift-c', duration: 14, delay: 1.2 },
+    { top: '64%', left: '30%', size: 220, rgb: '46, 143, 163', opacity: 0.16, keyframe: 'pmb-drift-a', duration: 10, delay: 0.6 },
   ],
 }
 

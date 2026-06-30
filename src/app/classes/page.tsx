@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { AnimatedBubbles } from '@/components/animated-bubbles'
 
 export const metadata: Metadata = {
   title: 'Our Classes',
@@ -14,6 +15,7 @@ export default function ClassesPage() {
       <section className="relative overflow-hidden bg-cream pt-36 pb-28">
         <div className="blob absolute -right-32 -top-24 h-[520px] w-[520px] bg-teal/20 blur-3xl" />
         <div className="blob absolute -left-40 bottom-[-10rem] h-[480px] w-[480px] bg-teal-light/10 blur-3xl" />
+        <AnimatedBubbles tone="light" count={8} />
 
         <div className="relative mx-auto max-w-6xl px-6">
           <div className="mx-auto max-w-2xl text-center">
@@ -174,6 +176,7 @@ export default function ClassesPage() {
       <section className="section-padding relative overflow-hidden bg-navy text-white">
         <div className="blob absolute -right-32 -top-24 h-[520px] w-[520px] bg-teal/20 blur-3xl" />
         <div className="blob absolute -left-40 bottom-[-10rem] h-[480px] w-[480px] bg-teal-light/10 blur-3xl" />
+        <AnimatedBubbles tone="dark" count={8} />
         <div className="relative mx-auto max-w-2xl text-center">
           <h2 className="reveal font-heading text-3xl font-bold md:text-4xl">
             Ready to give it a <span className="text-teal-light">go?</span>

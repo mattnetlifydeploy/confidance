@@ -24,9 +24,15 @@ export function ScrollReveal() {
     function observeElements() {
       const els = document.querySelectorAll('.reveal, .reveal-scale, .reveal-left, .reveal-right, .reveal-rotate')
       els.forEach((el) => {
-        if (!el.classList.contains('visible')) {
-          observer.observe(el)
+        if (el.classList.contains('visible')) return
+        // Fail-safe: anything already in the initial viewport reveals immediately,
+        // so it never stays stuck at opacity:0 if the observer is slow to fire.
+        const rect = el.getBoundingClientRect()
+        if (rect.top < window.innerHeight && rect.bottom > 0) {
+          el.classList.add('visible')
+          return
         }
+        observer.observe(el)
       })
     }
 

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { BookingNotice } from '@/components/booking-notice'
+import { AnimatedBubbles } from '@/components/animated-bubbles'
 
 export const metadata: Metadata = {
   title: 'Timetable',
@@ -15,6 +16,7 @@ export default function TimetablePage() {
       <section className="relative flex min-h-[82vh] items-center overflow-hidden bg-cream pt-12 pb-32">
       <div className="blob absolute -left-40 -top-24 h-[480px] w-[480px] bg-teal-light/12 blur-3xl" />
       <div className="blob absolute -right-32 bottom-[-8rem] h-[420px] w-[420px] bg-teal/15 blur-3xl" />
+      <AnimatedBubbles tone="light" count={8} />
 
       <div className="relative mx-auto w-full max-w-2xl px-6">
         <div className="reveal-scale card-glow rounded-3xl border border-teal-border bg-white/80 p-10 text-center backdrop-blur-sm md:p-14">

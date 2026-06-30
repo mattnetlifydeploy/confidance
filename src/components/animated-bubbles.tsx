@@ -18,20 +18,38 @@ function seededRandom(seed: number) {
   return x - Math.floor(x)
 }
 
-export function AnimatedBubbles({ count = 12, className = '' }: { count?: number; className?: string }) {
+type Tone = 'dark' | 'light'
+
+// Brand-only palette (navy 23,59,76 / teal 46,143,163 / teal-light 79,168,187 / pale 220,235,240).
+// dark = on navy bands (light tints show), light = on cream/pale bands (teal/navy tints show).
+const PALETTES: Record<Tone, string[]> = {
+  dark: [
+    'rgba(79, 168, 187, 0.52)',
+    'rgba(220, 235, 240, 0.44)',
+    'rgba(46, 143, 163, 0.46)',
+    'rgba(79, 168, 187, 0.38)',
+  ],
+  light: [
+    'rgba(46, 143, 163, 0.34)',
+    'rgba(23, 59, 76, 0.26)',
+    'rgba(79, 168, 187, 0.30)',
+    'rgba(46, 143, 163, 0.22)',
+  ],
+}
+
+export function AnimatedBubbles({
+  count = 12,
+  className = '',
+  tone = 'dark',
+}: {
+  count?: number
+  className?: string
+  tone?: Tone
+}) {
   const [bubbles, setBubbles] = useState<BubbleData[]>([])
 
   useEffect(() => {
-    const colors = [
-      'rgba(255, 90, 60, 0.8)',
-      'rgba(160, 120, 230, 0.8)',
-      'rgba(255, 200, 50, 0.8)',
-      'rgba(255, 80, 180, 0.75)',
-      'rgba(255, 140, 80, 0.75)',
-      'rgba(120, 80, 220, 0.75)',
-      'rgba(0, 200, 150, 0.7)',
-      'rgba(255, 50, 120, 0.75)',
-    ]
+    const colors = PALETTES[tone]
 
     const generated = Array.from({ length: count }, (_, i) => {
       const typeRandom = seededRandom(i * 7 + 5)
@@ -48,10 +66,10 @@ export function AnimatedBubbles({ count = 12, className = '' }: { count?: number
       const symbol = type === 'star' ? '★' : typeRandom < 0.85 ? '♪' : '♫'
 
       return {
-        size: 16 + seededRandom(i * 7 + 1) * 52,
+        size: 16 + seededRandom(i * 7 + 1) * 46,
         left: seededRandom(i * 7 + 2) * 100,
-        delay: seededRandom(i * 7 + 3) * 20,
-        duration: 15 + seededRandom(i * 7 + 4) * 20,
+        delay: seededRandom(i * 7 + 3) * 9,
+        duration: 13 + seededRandom(i * 7 + 4) * 12,
         color: colors[i % colors.length],
         type,
         symbol: type !== 'circle' ? symbol : undefined,
@@ -59,7 +77,7 @@ export function AnimatedBubbles({ count = 12, className = '' }: { count?: number
     })
 
     setBubbles(generated)
-  }, [count])
+  }, [count, tone])
 
   if (bubbles.length === 0) return null
 
