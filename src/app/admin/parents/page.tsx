@@ -5,6 +5,19 @@ import { useRouter } from 'next/navigation'
 import { getSupabase } from '@/lib/supabase'
 import type { ParentInterest, ParentInterestStatus } from '@/lib/parent-interests-schema'
 import { PARENT_INTEREST_STATUSES, PARENT_INTEREST_STATUS_LABELS } from '@/lib/parent-interests-schema'
+import {
+  AdminCard,
+  AdminPageHeader,
+  FilterTabs,
+  AdminSpinner,
+  EmptyState,
+  Modal,
+  Button,
+  FormField,
+  Select,
+  Textarea,
+  StatusBadge,
+} from '@/components/admin'
 
 export default function ParentsPage() {
   const router = useRouter()
@@ -118,15 +131,26 @@ export default function ParentsPage() {
     }
   }
 
+  const filterOptions = [
+    {
+      value: 'all',
+      label: 'All',
+      count: interests.length,
+    },
+    ...PARENT_INTEREST_STATUSES.map((status) => ({
+      value: status,
+      label: PARENT_INTEREST_STATUS_LABELS[status],
+      count: interests.filter((i) => i.status === status).length,
+    })),
+  ]
+
   return (
     <div className="space-y-6">
-      <div className="card-bezel rounded-3xl bg-white p-8">
-        <div>
-          <h2 className="font-heading text-xl font-bold text-navy">Parent Interest</h2>
-          <p className="mt-2 text-sm text-charcoal/60">
-            Parents who registered interest in bringing Confidance to their school
-          </p>
-        </div>
+      <AdminCard>
+        <AdminPageHeader
+          title="Parent Interest"
+          description="Parents who registered interest in bringing Confidance to their school"
+        />
 
         {error && (
           <div className="mt-4 rounded-lg bg-error/10 p-3 text-sm text-error">{error}</div>
@@ -135,96 +159,82 @@ export default function ParentsPage() {
           <div className="mt-4 rounded-lg bg-success/10 p-3 text-sm text-success">{success}</div>
         )}
 
-        <div className="mt-6 flex flex-wrap gap-2 border-b border-charcoal/10 pb-4">
-          <button
-            onClick={() => setStatusFilter('all')}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-              statusFilter === 'all'
-                ? 'bg-teal text-white'
-                : 'bg-charcoal/5 text-charcoal hover:bg-charcoal/10'
-            }`}
-          >
-            All ({interests.length})
-          </button>
-          {PARENT_INTEREST_STATUSES.map((status) => {
-            const count = interests.filter((i) => i.status === status).length
-            return (
-              <button
-                key={status}
-                onClick={() => setStatusFilter(status)}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                  statusFilter === status
-                    ? 'bg-teal text-white'
-                    : 'bg-charcoal/5 text-charcoal hover:bg-charcoal/10'
-                }`}
-              >
-                {PARENT_INTEREST_STATUS_LABELS[status]} ({count})
-              </button>
-            )
-          })}
+        <div className="mt-6 border-b border-charcoal/10 pb-4">
+          <FilterTabs options={filterOptions} value={statusFilter} onChange={(v) => setStatusFilter(v as ParentInterestStatus | 'all')} />
         </div>
 
-        {loading ? (
-          <div className="mt-6 flex justify-center py-8 text-sm text-charcoal/60">Loading parent interest...</div>
-        ) : interests.length === 0 ? (
-          <div className="mt-6 flex justify-center py-8">
-            <div className="text-center text-sm text-charcoal/60">
-              <p>No parent interest yet. Share your register-interest page to start collecting.</p>
-            </div>
-          </div>
-        ) : (
-          <div className="mt-6 space-y-3">
-            {interests.map((interest) => (
-              <button
-                key={interest.id}
-                onClick={() => openDetails(interest)}
-                className="w-full rounded-lg border border-charcoal/10 p-4 text-left transition-colors hover:bg-pale/20"
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <p className="font-medium text-navy">{interest.parent_name}</p>
-                    <p className="mt-1 text-sm text-charcoal/70">
-                      {interest.parent_email}
-                      {interest.preferred_school ? ` • ${interest.preferred_school}` : ''}
-                    </p>
-                    <p className="mt-1 text-xs text-charcoal/50">
-                      {new Date(interest.created_at).toLocaleDateString('en-GB', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </p>
+        <div className="mt-6">
+          {loading ? (
+            <AdminSpinner />
+          ) : interests.length === 0 ? (
+            <EmptyState
+              title="No parent interest yet"
+              description="Share your register-interest page to start collecting."
+            />
+          ) : (
+            <div className="space-y-3">
+              {interests.map((interest) => (
+                <button
+                  key={interest.id}
+                  onClick={() => openDetails(interest)}
+                  className="w-full rounded-lg border border-charcoal/10 p-4 text-left transition-colors hover:bg-pale/20"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <p className="font-medium text-navy">{interest.parent_name}</p>
+                      <p className="mt-1 text-sm text-charcoal/70">
+                        {interest.parent_email}
+                        {interest.preferred_school ? ` • ${interest.preferred_school}` : ''}
+                      </p>
+                      <p className="mt-1 text-xs text-charcoal/50">
+                        {new Date(interest.created_at).toLocaleDateString('en-GB', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </p>
+                    </div>
+                    <StatusBadge
+                      label={PARENT_INTEREST_STATUS_LABELS[interest.status]}
+                      status={interest.status}
+                    />
                   </div>
-                  <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium shrink-0 ${
-                    interest.status === 'new' ? 'bg-info/20 text-info' :
-                    interest.status === 'contacted' ? 'bg-warning/20 text-warning' :
-                    interest.status === 'interested' ? 'bg-teal/20 text-teal' :
-                    interest.status === 'signed' ? 'bg-success/20 text-success' :
-                    'bg-charcoal/10 text-charcoal/60'
-                  }`}>
-                    {PARENT_INTEREST_STATUS_LABELS[interest.status]}
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {selected && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="card-bezel w-full max-w-2xl rounded-3xl bg-white p-8 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between gap-4">
-              <h3 className="font-heading text-lg font-bold text-navy">{selected.parent_name}</h3>
-              <button
-                onClick={closeDetails}
-                className="text-charcoal/60 hover:text-charcoal"
-              >
-                ✕
-              </button>
+                </button>
+              ))}
             </div>
+          )}
+        </div>
+      </AdminCard>
 
-            <div className="mt-6 space-y-4">
+      <Modal
+        open={!!selected}
+        onClose={closeDetails}
+        title={selected?.parent_name}
+        size="lg"
+        footer={
+          <>
+            <Button
+              variant="primary"
+              size="md"
+              loading={saving}
+              onClick={handleSave}
+            >
+              Save changes
+            </Button>
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={closeDetails}
+              disabled={saving}
+            >
+              Close
+            </Button>
+          </>
+        }
+      >
+        {selected && (
+          <>
+            <div className="space-y-4">
               <div>
                 <p className="text-xs font-medium text-charcoal/60 uppercase">Email</p>
                 <p className="mt-1 text-charcoal">{selected.parent_email}</p>
@@ -267,33 +277,28 @@ export default function ParentsPage() {
             </div>
 
             <div className="mt-6 border-t border-charcoal/10 pt-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-charcoal">Status</label>
-                <select
+              <FormField label="Status">
+                <Select
                   value={editStatus}
                   onChange={(e) => setEditStatus(e.target.value as ParentInterestStatus)}
-                  className="mt-2 w-full rounded-lg border border-charcoal/20 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal"
                 >
                   {PARENT_INTEREST_STATUSES.map((status) => (
                     <option key={status} value={status}>
                       {PARENT_INTEREST_STATUS_LABELS[status]}
                     </option>
                   ))}
-                </select>
-              </div>
+                </Select>
+              </FormField>
 
-              <div>
-                <label className="block text-sm font-medium text-charcoal">Admin notes</label>
-                <textarea
+              <FormField label="Admin notes" hint={`${editNotes.length} / 5000`}>
+                <Textarea
                   value={editNotes}
                   onChange={(e) => setEditNotes(e.target.value)}
                   maxLength={5000}
                   rows={5}
-                  className="mt-2 w-full rounded-lg border border-charcoal/20 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal"
                   placeholder="Add any internal notes about this parent..."
                 />
-                <p className="mt-1 text-xs text-charcoal/50">{editNotes.length} / 5000</p>
-              </div>
+              </FormField>
             </div>
 
             {error && (
@@ -302,25 +307,9 @@ export default function ParentsPage() {
             {success && (
               <div className="mt-4 rounded-lg bg-success/10 p-3 text-sm text-success">{success}</div>
             )}
-
-            <div className="mt-6 flex gap-3">
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="btn-primary rounded-lg px-6 py-2 text-sm disabled:opacity-50"
-              >
-                {saving ? 'Saving...' : 'Save changes'}
-              </button>
-              <button
-                onClick={closeDetails}
-                className="btn-secondary rounded-lg px-6 py-2 text-sm"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
     </div>
   )
 }

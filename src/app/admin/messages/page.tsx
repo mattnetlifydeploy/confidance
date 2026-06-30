@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { getSupabase } from '@/lib/supabase'
 import type { AdminMessagesLog } from '@/lib/database.types'
+import { AdminCard, AdminPageHeader, FilterSelect, EmptyState, AdminSpinner, StatusBadge } from '@/components/admin'
 
 export default function MessagesPage() {
   const [messages, setMessages] = useState<AdminMessagesLog[]>([])
@@ -58,70 +59,64 @@ export default function MessagesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl bg-white p-8 shadow-sm card-glow">
-        <h2 className="font-heading text-xl font-bold">Messages Log</h2>
-        <p className="mt-2 text-sm text-warm-gray">
-          View all sent emails and banners with delivery status
-        </p>
+      <AdminCard>
+        <AdminPageHeader
+          title="Messages Log"
+          description="View all sent emails and banners with delivery status"
+        />
 
         <div className="mt-6 space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <FilterSelect
+              label="Channel"
+              value={channelFilter}
+              onChange={(e) => setChannelFilter(e as 'all' | 'email' | 'banner')}
+              options={[
+                { value: 'all', label: 'All channels' },
+                { value: 'email', label: 'Email' },
+                { value: 'banner', label: 'Banner' },
+              ]}
+            />
             <div>
-              <label className="block text-sm font-medium">Channel</label>
-              <select
-                value={channelFilter}
-                onChange={(e) => setChannelFilter(e.target.value as 'all' | 'email' | 'banner')}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm"
-              >
-                <option value="all">All channels</option>
-                <option value="email">Email</option>
-                <option value="banner">Banner</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium">From date</label>
+              <label className="block text-sm font-medium text-charcoal">From date</label>
               <input
                 type="date"
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm"
+                className="mt-2 w-full rounded-lg border border-charcoal/20 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium">To date</label>
+              <label className="block text-sm font-medium text-charcoal">To date</label>
               <input
                 type="date"
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm"
+                className="mt-2 w-full rounded-lg border border-charcoal/20 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal"
               />
             </div>
           </div>
 
           {messagesLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="text-sm text-warm-gray">Loading messages...</div>
-            </div>
+            <AdminSpinner />
           ) : messages.length === 0 ? (
-            <div className="flex justify-center py-8">
-              <div className="text-sm text-warm-gray">No messages found</div>
-            </div>
+            <EmptyState title="No messages found" description="Try adjusting your filters" />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left px-4 py-2 font-medium">Sent at</th>
-                    <th className="text-left px-4 py-2 font-medium">Channel</th>
-                    <th className="text-left px-4 py-2 font-medium">Subject</th>
-                    <th className="text-left px-4 py-2 font-medium">Count</th>
-                    <th className="text-left px-4 py-2 font-medium">Status</th>
+                  <tr className="border-b border-charcoal/10">
+                    <th className="text-left px-4 py-2 font-medium text-charcoal/80">Sent at</th>
+                    <th className="text-left px-4 py-2 font-medium text-charcoal/80">Channel</th>
+                    <th className="text-left px-4 py-2 font-medium text-charcoal/80">Subject</th>
+                    <th className="text-left px-4 py-2 font-medium text-charcoal/80">Count</th>
+                    <th className="text-left px-4 py-2 font-medium text-charcoal/80">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {messages.map((msg) => (
-                    <tr key={msg.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="px-4 py-2">
+                    <tr key={msg.id} className="border-b border-charcoal/5 hover:bg-cream/20">
+                      <td className="px-4 py-2 text-charcoal/70">
                         {new Date(msg.sent_at).toLocaleDateString('en-GB', {
                           year: '2-digit',
                           month: '2-digit',
@@ -131,15 +126,14 @@ export default function MessagesPage() {
                         })}
                       </td>
                       <td className="px-4 py-2">
-                        <span className={`inline-block rounded-full px-2 py-1 text-xs font-medium ${
-                          msg.channel === 'email' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
-                        }`}>
-                          {msg.channel}
-                        </span>
+                        <StatusBadge
+                          label={msg.channel}
+                          tone={msg.channel === 'email' ? 'teal' : 'info'}
+                        />
                       </td>
-                      <td className="px-4 py-2 truncate max-w-xs">{msg.subject || 'N/A'}</td>
-                      <td className="px-4 py-2">{msg.recipient_count || '—'}</td>
-                      <td className="px-4 py-2 text-xs">
+                      <td className="px-4 py-2 truncate max-w-xs text-charcoal/70">{msg.subject || 'N/A'}</td>
+                      <td className="px-4 py-2 text-charcoal/70">{msg.recipient_count || '-'}</td>
+                      <td className="px-4 py-2 text-xs text-charcoal/60">
                         {formatDeliveryStatus(msg.delivery_status)}
                       </td>
                     </tr>
@@ -149,7 +143,7 @@ export default function MessagesPage() {
             </div>
           )}
         </div>
-      </div>
+      </AdminCard>
     </div>
   )
 }

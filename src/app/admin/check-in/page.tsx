@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { getSupabase } from '@/lib/supabase'
 import { CLASSES, getCurrentTerm, getTermSessionDates } from '@/lib/constants'
 import type { ClassType } from '@/lib/constants'
+import { AdminSpinner, AdminPageHeader, AdminCard, StatusBadge, statusTone, AdminBanner, EmptyState } from '@/components/admin'
 
 type RosterChild = {
   childId: string
@@ -212,22 +213,20 @@ export default function CheckInPage() {
 
   return (
     <div className="space-y-6">
-      <div className="mt-6">
-        <h2 className="font-heading text-xl font-bold">Check-in</h2>
-        <p className="mt-1 text-sm text-warm-gray">
-          Pick a class and date, tick children as they arrive.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Check-in"
+        description="Pick a class and date, tick children as they arrive."
+      />
 
-      <div className="flex flex-wrap gap-4 rounded-3xl bg-white p-6 shadow-sm card-glow">
+      <AdminCard className="flex flex-wrap gap-4">
         <div className="flex-1 min-w-[200px]">
-          <label className="block text-xs font-600 text-warm-gray mb-1">
+          <label className="block text-xs font-600 text-charcoal-light mb-1">
             Class
           </label>
           <select
             value={classType}
             onChange={(e) => setClassType(e.target.value as ClassType)}
-            className="w-full rounded-xl border border-border bg-white px-4 py-3 text-sm focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/20"
+            className="w-full rounded-xl border border-border bg-white px-4 py-3 text-sm focus:border-teal focus:outline-none focus:ring-2 focus:ring-teal/20"
           >
             {Object.entries(CLASSES).map(([key, cls]) => (
               <option key={key} value={key}>
@@ -238,13 +237,13 @@ export default function CheckInPage() {
         </div>
 
         <div className="flex-1 min-w-[200px]">
-          <label className="block text-xs font-600 text-warm-gray mb-1">
+          <label className="block text-xs font-600 text-charcoal-light mb-1">
             Date
           </label>
           <select
             value={sessionDate}
             onChange={(e) => setSessionDate(e.target.value)}
-            className="w-full rounded-xl border border-border bg-white px-4 py-3 text-sm focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/20"
+            className="w-full rounded-xl border border-border bg-white px-4 py-3 text-sm focus:border-teal focus:outline-none focus:ring-2 focus:ring-teal/20"
           >
             {sessionDates.map((date) => {
               const formatted = new Intl.DateTimeFormat('en-GB', {
@@ -260,36 +259,28 @@ export default function CheckInPage() {
             })}
           </select>
         </div>
-      </div>
+      </AdminCard>
 
-      <div className="rounded-3xl bg-white p-6 shadow-sm card-glow">
+      <AdminCard>
         <div className="mb-6">
           <h3 className="font-heading text-lg font-semibold">
             {CLASSES[classType].name} . {formattedDateLong}
           </h3>
-          <p className="mt-1 text-sm text-warm-gray">
+          <p className="mt-1 text-sm text-charcoal-light">
             {checkedInCount} of {rosterCount} checked in
           </p>
         </div>
 
         {error && (
-          <div className="mb-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">
+          <AdminBanner tone="error" className="mb-4">
             {error}
-          </div>
+          </AdminBanner>
         )}
 
         {loading ? (
-          <div className="flex justify-center py-8">
-            <div className="flex gap-2">
-              <span className="dancing-dot bg-coral" />
-              <span className="dancing-dot bg-lilac" />
-              <span className="dancing-dot bg-gold" />
-            </div>
-          </div>
+          <AdminSpinner className="py-8" />
         ) : rosterCount === 0 ? (
-          <p className="text-sm text-warm-gray">
-            No bookings for this class in this term yet.
-          </p>
+          <EmptyState title="No bookings yet" description="No bookings for this class in this term yet." />
         ) : (
           <div className="space-y-0">
             {roster.map((child) => {
@@ -301,7 +292,7 @@ export default function CheckInPage() {
                 <div
                   key={child.childId}
                   className={`flex items-start gap-4 border-b border-border last:border-0 py-3 ${
-                    isCheckedIn ? 'bg-coral/5' : ''
+                    isCheckedIn ? 'bg-teal/5' : ''
                   }`}
                 >
                   <input
@@ -310,39 +301,34 @@ export default function CheckInPage() {
                     onChange={(e) =>
                       handleToggleCheckIn(child.childId, e.target.checked)
                     }
-                    className="mt-1 h-5 w-5 rounded border-2 border-border text-coral focus:ring-coral cursor-pointer"
+                    className="mt-1 h-5 w-5 rounded border-2 border-border text-teal focus:ring-teal cursor-pointer"
                   />
 
                   <div className="flex-1 min-w-0">
                     <div
                       className={`font-600 ${
-                        isCheckedIn ? 'line-through text-warm-gray' : ''
+                        isCheckedIn ? 'line-through text-charcoal-light' : ''
                       }`}
                     >
                       {child.childName}
                     </div>
-                    <div className="mt-0.5 text-xs text-warm-gray">
+                    <div className="mt-0.5 text-xs text-charcoal-light">
                       {child.parentName} . {contactInfo}
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    {child.status === 'confirmed' ? (
-                      <span className="inline-block rounded-full bg-green-100 text-green-700 px-2 py-0.5 text-xs font-600">
-                        Paid
-                      </span>
-                    ) : (
-                      <span className="inline-block rounded-full bg-gold/15 text-gold px-2 py-0.5 text-xs font-600">
-                        Unpaid
-                      </span>
-                    )}
+                    <StatusBadge
+                      label={child.status === 'confirmed' ? 'Paid' : 'Unpaid'}
+                      status={child.status}
+                    />
                   </div>
                 </div>
               )
             })}
           </div>
         )}
-      </div>
+      </AdminCard>
     </div>
   )
 }

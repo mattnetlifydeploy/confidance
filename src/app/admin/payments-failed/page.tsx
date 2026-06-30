@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context'
 import { CLASSES } from '@/lib/constants'
 import type { Booking, Child, Profile } from '@/lib/database.types'
 import type { ClassType } from '@/lib/constants'
+import { AdminSpinner, AdminBanner, EmptyState, Button, AdminCard } from '@/components/admin'
 
 type PaymentFailedRow = {
   id: string
@@ -123,54 +124,44 @@ export default function PaymentsFailedPage() {
   }))
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="flex gap-2">
-          <span className="dancing-dot bg-coral" />
-          <span className="dancing-dot bg-lilac" />
-          <span className="dancing-dot bg-gold" />
-        </div>
-      </div>
-    )
+    return <AdminSpinner className="py-12" />
   }
 
   if (error) {
     return (
-      <div className="rounded-2xl bg-red-50 p-4 text-red-800">
+      <AdminBanner tone="error">
         {error}
-      </div>
+      </AdminBanner>
     )
   }
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-2xl bg-white p-8 text-center text-warm-gray">
-        <p>No bookings with failed payments.</p>
-      </div>
+      <EmptyState title="No failed payments" description="No bookings with failed payments." />
     )
   }
 
   return (
-    <div className="overflow-x-auto rounded-2xl bg-white">
+    <AdminCard className="overflow-x-auto">
       <table className="w-full">
         <thead>
-          <tr className="border-b border-warm-gray/10 bg-warm-gray/5">
-            <th className="px-6 py-4 text-left font-heading text-sm font-600 text-warm-gray">
+          <tr className="border-b border-charcoal-light/10 bg-charcoal-light/5">
+            <th className="px-6 py-4 text-left font-heading text-sm font-600 text-charcoal-light">
               Parent
             </th>
-            <th className="px-6 py-4 text-left font-heading text-sm font-600 text-warm-gray">
+            <th className="px-6 py-4 text-left font-heading text-sm font-600 text-charcoal-light">
               Child
             </th>
-            <th className="px-6 py-4 text-left font-heading text-sm font-600 text-warm-gray">
+            <th className="px-6 py-4 text-left font-heading text-sm font-600 text-charcoal-light">
               Class
             </th>
-            <th className="px-6 py-4 text-left font-heading text-sm font-600 text-warm-gray">
+            <th className="px-6 py-4 text-left font-heading text-sm font-600 text-charcoal-light">
               Amount
             </th>
-            <th className="px-6 py-4 text-left font-heading text-sm font-600 text-warm-gray">
+            <th className="px-6 py-4 text-left font-heading text-sm font-600 text-charcoal-light">
               Flagged
             </th>
-            <th className="px-6 py-4 text-right font-heading text-sm font-600 text-warm-gray">
+            <th className="px-6 py-4 text-right font-heading text-sm font-600 text-charcoal-light">
               Actions
             </th>
           </tr>
@@ -180,32 +171,35 @@ export default function PaymentsFailedPage() {
             const classMeta = CLASSES[row.classType]
             const className = classMeta?.name || row.classType
             return (
-              <tr key={row.id} className="border-b border-warm-gray/10 hover:bg-warm-gray/2">
-                <td className="px-6 py-4 text-sm text-warm-gray">{row.parentName}</td>
-                <td className="px-6 py-4 text-sm text-warm-gray">{row.childName}</td>
-                <td className="px-6 py-4 text-sm text-warm-gray">{className}</td>
-                <td className="px-6 py-4 text-sm font-600 text-warm-gray">
+              <tr key={row.id} className="border-b border-charcoal-light/10 hover:bg-charcoal-light/2">
+                <td className="px-6 py-4 text-sm text-charcoal-light">{row.parentName}</td>
+                <td className="px-6 py-4 text-sm text-charcoal-light">{row.childName}</td>
+                <td className="px-6 py-4 text-sm text-charcoal-light">{className}</td>
+                <td className="px-6 py-4 text-sm font-600 text-charcoal-light">
                   £{(row.amount / 100).toFixed(2)}
                 </td>
-                <td className="px-6 py-4 text-sm text-warm-gray">
+                <td className="px-6 py-4 text-sm text-charcoal-light">
                   {new Date(row.flaggedAt).toLocaleDateString()}
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex gap-2 justify-end">
-                    <button
+                    <Button
                       onClick={() => handleAction(row.id, 'retry')}
                       disabled={actionLoading === row.id}
-                      className="rounded-lg bg-coral px-3 py-2 text-xs font-600 text-white transition-all hover:bg-coral/80 disabled:opacity-50"
+                      size="sm"
+                      loading={actionLoading === row.id}
                     >
-                      {actionLoading === row.id ? 'Sending...' : 'Resend Link'}
-                    </button>
-                    <button
+                      Resend Link
+                    </Button>
+                    <Button
                       onClick={() => handleAction(row.id, 'cancel')}
                       disabled={actionLoading === row.id}
-                      className="rounded-lg border border-warm-gray/30 px-3 py-2 text-xs font-600 text-warm-gray transition-all hover:bg-warm-gray/10 disabled:opacity-50"
+                      variant="secondary"
+                      size="sm"
+                      loading={actionLoading === row.id}
                     >
-                      {actionLoading === row.id ? 'Cancelling...' : 'Cancel'}
-                    </button>
+                      Cancel
+                    </Button>
                   </div>
                 </td>
               </tr>
@@ -213,6 +207,6 @@ export default function PaymentsFailedPage() {
           })}
         </tbody>
       </table>
-    </div>
+    </AdminCard>
   )
 }

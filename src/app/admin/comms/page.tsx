@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { getSupabase } from '@/lib/supabase'
 import { CLASSES, TERMS } from '@/lib/constants'
+import { AdminCard, AdminPageHeader, Button, FormField, Select, Textarea, AdminBanner } from '@/components/admin'
 
 export default function CommsPage() {
   const [emailForm, setEmailForm] = useState({
@@ -114,44 +115,39 @@ export default function CommsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Send Email Card */}
-      <div className="mt-6 rounded-3xl bg-white p-8 shadow-sm card-glow">
-        <h2 className="font-heading text-xl font-bold">Send Email</h2>
-        <p className="mt-2 text-sm text-warm-gray">
-          Send announcements to parents via email
-        </p>
+      <AdminCard>
+        <AdminPageHeader
+          title="Send Email"
+          description="Send announcements to parents via email"
+        />
 
         <div className="mt-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium">Subject</label>
+          <FormField label="Subject">
             <input
               type="text"
               value={emailForm.subject}
               onChange={(e) => setEmailForm({ ...emailForm, subject: e.target.value })}
               placeholder="Email subject"
               maxLength={200}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm"
+              className="w-full rounded-lg border border-charcoal/20 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal"
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-sm font-medium">Body</label>
+          <FormField label="Body">
             <textarea
               value={emailForm.body}
               onChange={(e) => setEmailForm({ ...emailForm, body: e.target.value })}
               placeholder="Email body (plain text)"
               maxLength={10000}
               rows={5}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm"
+              className="w-full rounded-lg border border-charcoal/20 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal"
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-sm font-medium">Audience</label>
-            <select
+          <FormField label="Audience">
+            <Select
               value={emailForm.audience}
               onChange={(e) => setEmailForm({ ...emailForm, audience: e.target.value })}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm"
             >
               <option value="all">All parents</option>
               {Object.entries(CLASSES).map(([key, val]) => (
@@ -164,53 +160,47 @@ export default function CommsPage() {
                   Parents on {term.name} {term.year}
                 </option>
               ))}
-            </select>
-          </div>
+            </Select>
+          </FormField>
 
           {emailMessage && (
-            <div className={`rounded-lg px-4 py-2 text-sm ${
-              emailMessage.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-            }`}>
+            <AdminBanner tone={emailMessage.type === 'success' ? 'success' : 'error'}>
               {emailMessage.text}
-            </div>
+            </AdminBanner>
           )}
 
-          <button
+          <Button
             onClick={handleEmailSubmit}
             disabled={emailSubmitting}
-            className="w-full rounded-lg bg-coral px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            loading={emailSubmitting}
+            className="w-full"
           >
-            {emailSubmitting ? 'Sending...' : 'Send Email'}
-          </button>
+            Send Email
+          </Button>
         </div>
-      </div>
+      </AdminCard>
 
-      {/* Publish Banner Card */}
-      <div className="rounded-3xl bg-white p-8 shadow-sm card-glow">
-        <h2 className="font-heading text-xl font-bold">Publish Banner</h2>
-        <p className="mt-2 text-sm text-warm-gray">
-          Display messages in the dashboard portal
-        </p>
+      <AdminCard>
+        <AdminPageHeader
+          title="Publish Banner"
+          description="Display messages in the dashboard portal"
+        />
 
         <div className="mt-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium">Message</label>
-            <textarea
+          <FormField label="Message">
+            <Textarea
               value={bannerForm.body}
               onChange={(e) => setBannerForm({ ...bannerForm, body: e.target.value })}
               placeholder="Banner message (max 1000 characters)"
               maxLength={1000}
               rows={3}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm"
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-sm font-medium">Audience</label>
-            <select
+          <FormField label="Audience">
+            <Select
               value={bannerForm.audience}
               onChange={(e) => setBannerForm({ ...bannerForm, audience: e.target.value })}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm"
             >
               <option value="all">All parents</option>
               {Object.entries(CLASSES).map(([key, val]) => (
@@ -223,36 +213,34 @@ export default function CommsPage() {
                   Parents on {term.name} {term.year}
                 </option>
               ))}
-            </select>
-          </div>
+            </Select>
+          </FormField>
 
-          <div>
-            <label className="block text-sm font-medium">Expires at (optional)</label>
+          <FormField label="Expires at (optional)">
             <input
               type="datetime-local"
               value={bannerForm.expiresAt}
               onChange={(e) => setBannerForm({ ...bannerForm, expiresAt: e.target.value })}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm"
+              className="w-full rounded-lg border border-charcoal/20 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal"
             />
-          </div>
+          </FormField>
 
           {bannerMessage && (
-            <div className={`rounded-lg px-4 py-2 text-sm ${
-              bannerMessage.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-            }`}>
+            <AdminBanner tone={bannerMessage.type === 'success' ? 'success' : 'error'}>
               {bannerMessage.text}
-            </div>
+            </AdminBanner>
           )}
 
-          <button
+          <Button
             onClick={handleBannerSubmit}
             disabled={bannerSubmitting}
-            className="w-full rounded-lg bg-coral px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            loading={bannerSubmitting}
+            className="w-full"
           >
-            {bannerSubmitting ? 'Publishing...' : 'Publish Banner'}
-          </button>
+            Publish Banner
+          </Button>
         </div>
-      </div>
+      </AdminCard>
     </div>
   )
 }

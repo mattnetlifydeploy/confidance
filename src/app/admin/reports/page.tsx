@@ -2,8 +2,9 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { CLASSES, TERMS, type TermDef } from '@/lib/constants'
 import type { Database, Booking, Attendance } from '@/lib/database.types'
 import type { ClassType } from '@/lib/constants'
-import { formatPence, formatRefundRow } from '@/lib/refund-formatter'
+import { formatPence } from '@/lib/refund-formatter'
 import { ExportCsvButton } from '@/components/export-csv-button'
+import { AdminPageHeader, StatTile, StatGrid, AdminCard, EmptyState } from '@/components/admin'
 
 export const dynamic = 'force-dynamic'
 
@@ -300,35 +301,24 @@ export default async function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="font-heading text-xl font-bold">Reports</h2>
-        <p className="mt-1 text-sm text-warm-gray">
-          Revenue, attendance, and term fill across every term.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Reports"
+        description="Revenue, attendance, and term fill across every term."
+      />
 
       {loadError && (
-        <div className="rounded-3xl bg-red-50 p-6 shadow-sm card-glow">
-          <p className="text-sm text-red-700">{loadError}</p>
+        <div className="rounded-lg bg-error/10 p-4 text-sm text-error">
+          {loadError}
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <div className="rounded-2xl bg-white p-4 shadow-sm card-glow text-center">
-          <p className="font-heading text-2xl font-bold text-coral">{formatPence(grandRevenue)}</p>
-          <p className="mt-1 text-xs text-warm-gray">Total revenue (confirmed)</p>
-        </div>
-        <div className="rounded-2xl bg-white p-4 shadow-sm card-glow text-center">
-          <p className="font-heading text-2xl font-bold text-lilac">{grandAttendance}</p>
-          <p className="mt-1 text-xs text-warm-gray">Total check-ins</p>
-        </div>
-        <div className="rounded-2xl bg-white p-4 shadow-sm card-glow text-center">
-          <p className="font-heading text-2xl font-bold text-gold">{grandFill}</p>
-          <p className="mt-1 text-xs text-warm-gray">Total confirmed bookings</p>
-        </div>
-      </div>
+      <StatGrid className="grid-cols-1 md:grid-cols-3">
+        <StatTile label="Total revenue (confirmed)" value={formatPence(grandRevenue)} tone="teal" />
+        <StatTile label="Total check-ins" value={grandAttendance} tone="default" />
+        <StatTile label="Total confirmed bookings" value={grandFill} tone="teal" />
+      </StatGrid>
 
-      <section className="rounded-3xl bg-white p-6 shadow-sm card-glow">
+      <AdminCard>
         <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
           <h3 className="font-heading text-lg font-bold">Revenue by term</h3>
           {revenue.length > 0 && (
@@ -347,16 +337,16 @@ export default async function ReportsPage() {
             />
           )}
         </div>
-        <p className="mt-1 text-sm text-warm-gray">Sum of amount paid on confirmed bookings.</p>
+        <p className="mt-1 text-sm text-charcoal-light">Sum of amount paid on confirmed bookings.</p>
         {revenue.length === 0 ? (
-          <p className="mt-4 text-sm text-warm-gray italic">No revenue recorded yet.</p>
+          <EmptyState title="No revenue recorded" />
         ) : (
           <div className="mt-4 space-y-4">
             {revenue.map((g) => (
-              <div key={termKey(g.termName, g.termYear)} className="rounded-2xl bg-cream/50 p-4">
+              <div key={termKey(g.termName, g.termYear)} className="rounded-2xl bg-cream/40 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
                   <p className="font-heading text-base font-bold">{termLabel(g.termName, g.termYear)}</p>
-                  <span className="inline-block rounded-full bg-coral/15 px-3 py-1 text-xs font-600 text-coral">
+                  <span className="inline-block rounded-full bg-teal/15 px-3 py-1 text-xs font-600 text-teal">
                     {formatPence(g.total)}
                   </span>
                 </div>
@@ -364,7 +354,7 @@ export default async function ReportsPage() {
                   {g.rows.map((r) => (
                     <div key={r.classType} className="flex flex-wrap items-center justify-between gap-2 text-sm">
                       <span className="font-600">{classLabel(r.classType)}</span>
-                      <span className="text-warm-gray">
+                      <span className="text-charcoal-light">
                         {r.bookings} booking{r.bookings !== 1 ? 's' : ''} . {formatPence(r.pence)}
                       </span>
                     </div>
@@ -374,9 +364,9 @@ export default async function ReportsPage() {
             ))}
           </div>
         )}
-      </section>
+      </AdminCard>
 
-      <section className="rounded-3xl bg-white p-6 shadow-sm card-glow">
+      <AdminCard>
         <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
           <h3 className="font-heading text-lg font-bold">Attendance by term</h3>
           {attendance.length > 0 && (
@@ -394,18 +384,18 @@ export default async function ReportsPage() {
             />
           )}
         </div>
-        <p className="mt-1 text-sm text-warm-gray">
+        <p className="mt-1 text-sm text-charcoal-light">
           Check-ins grouped by term (derived from session date) and class.
         </p>
         {attendance.length === 0 ? (
-          <p className="mt-4 text-sm text-warm-gray italic">No check-ins recorded yet.</p>
+          <EmptyState title="No check-ins recorded" />
         ) : (
           <div className="mt-4 space-y-4">
             {attendance.map((g) => (
-              <div key={termKey(g.termName, g.termYear)} className="rounded-2xl bg-cream/50 p-4">
+              <div key={termKey(g.termName, g.termYear)} className="rounded-2xl bg-cream/40 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
                   <p className="font-heading text-base font-bold">{termLabel(g.termName, g.termYear)}</p>
-                  <span className="inline-block rounded-full bg-lilac/15 px-3 py-1 text-xs font-600 text-lilac">
+                  <span className="inline-block rounded-full bg-navy-light/15 px-3 py-1 text-xs font-600 text-navy-light">
                     {g.total} check-in{g.total !== 1 ? 's' : ''}
                   </span>
                 </div>
@@ -413,7 +403,7 @@ export default async function ReportsPage() {
                   {g.rows.map((r) => (
                     <div key={r.classType} className="flex flex-wrap items-center justify-between gap-2 text-sm">
                       <span className="font-600">{classLabel(r.classType)}</span>
-                      <span className="text-warm-gray">{r.count} check-in{r.count !== 1 ? 's' : ''}</span>
+                      <span className="text-charcoal-light">{r.count} check-in{r.count !== 1 ? 's' : ''}</span>
                     </div>
                   ))}
                 </div>
@@ -421,9 +411,9 @@ export default async function ReportsPage() {
             ))}
           </div>
         )}
-      </section>
+      </AdminCard>
 
-      <section className="rounded-3xl bg-white p-6 shadow-sm card-glow">
+      <AdminCard>
         <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
           <h3 className="font-heading text-lg font-bold">Term fill</h3>
           {fill.length > 0 && (
@@ -441,18 +431,18 @@ export default async function ReportsPage() {
             />
           )}
         </div>
-        <p className="mt-1 text-sm text-warm-gray">
+        <p className="mt-1 text-sm text-charcoal-light">
           Confirmed bookings per class per term. Raw counts (no capacity ratio yet).
         </p>
         {fill.length === 0 ? (
-          <p className="mt-4 text-sm text-warm-gray italic">No confirmed bookings yet.</p>
+          <EmptyState title="No confirmed bookings" />
         ) : (
           <div className="mt-4 space-y-4">
             {fill.map((g) => (
-              <div key={termKey(g.termName, g.termYear)} className="rounded-2xl bg-cream/50 p-4">
+              <div key={termKey(g.termName, g.termYear)} className="rounded-2xl bg-cream/40 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
                   <p className="font-heading text-base font-bold">{termLabel(g.termName, g.termYear)}</p>
-                  <span className="inline-block rounded-full bg-gold/15 px-3 py-1 text-xs font-600 text-gold">
+                  <span className="inline-block rounded-full bg-teal-light/15 px-3 py-1 text-xs font-600 text-teal-light">
                     {g.total} booking{g.total !== 1 ? 's' : ''}
                   </span>
                 </div>
@@ -460,7 +450,7 @@ export default async function ReportsPage() {
                   {g.rows.map((r) => (
                     <div key={r.classType} className="flex flex-wrap items-center justify-between gap-2 text-sm">
                       <span className="font-600">{classLabel(r.classType)}</span>
-                      <span className="text-warm-gray">{r.count} booking{r.count !== 1 ? 's' : ''}</span>
+                      <span className="text-charcoal-light">{r.count} booking{r.count !== 1 ? 's' : ''}</span>
                     </div>
                   ))}
                 </div>
@@ -468,9 +458,9 @@ export default async function ReportsPage() {
             ))}
           </div>
         )}
-      </section>
+      </AdminCard>
 
-      <section className="rounded-3xl bg-white p-6 shadow-sm card-glow">
+      <AdminCard>
         <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
           <h3 className="font-heading text-lg font-bold">Refunds</h3>
           {refunds.length > 0 && (
@@ -491,11 +481,11 @@ export default async function ReportsPage() {
             />
           )}
         </div>
-        <p className="mt-1 text-sm text-warm-gray">
+        <p className="mt-1 text-sm text-charcoal-light">
           Processed refunds from session cancellations.
         </p>
         {refunds.length === 0 ? (
-          <p className="mt-4 text-sm text-warm-gray italic">No refunds processed yet.</p>
+          <EmptyState title="No refunds processed" />
         ) : (
           <div className="mt-4 overflow-x-auto">
             <table className="w-full text-sm">
@@ -513,21 +503,21 @@ export default async function ReportsPage() {
               <tbody className="divide-y divide-border">
                 {refunds.map((r, i) => (
                   <tr key={i} className="hover:bg-cream/25">
-                    <td className="px-3 py-3 text-warm-gray">
+                    <td className="px-3 py-3 text-charcoal-light">
                       {new Date(r.date).toLocaleDateString('en-GB')}
                     </td>
                     <td className="px-3 py-3">
                       <div className="font-600">{r.parentName}</div>
-                      <div className="text-xs text-warm-gray">{r.parentEmail}</div>
+                      <div className="text-xs text-charcoal-light">{r.parentEmail}</div>
                     </td>
                     <td className="px-3 py-3 font-600">{r.childName}</td>
-                    <td className="px-3 py-3 text-right text-warm-gray">
+                    <td className="px-3 py-3 text-right text-charcoal-light">
                       {formatPence(r.originalAmountPence)}
                     </td>
-                    <td className="px-3 py-3 text-right font-600 text-coral">
+                    <td className="px-3 py-3 text-right font-600 text-teal">
                       {formatPence(r.refundAmountPence)}
                     </td>
-                    <td className="px-3 py-3 text-warm-gray">{r.reason}</td>
+                    <td className="px-3 py-3 text-charcoal-light">{r.reason}</td>
                     <td className="px-3 py-3 text-sm">{r.processedBy}</td>
                   </tr>
                 ))}
@@ -535,7 +525,7 @@ export default async function ReportsPage() {
             </table>
           </div>
         )}
-      </section>
+      </AdminCard>
     </div>
   )
 }
