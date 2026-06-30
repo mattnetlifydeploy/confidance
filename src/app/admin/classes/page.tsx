@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { getSupabase } from '@/lib/supabase'
 import type { DbClass } from '@/lib/classes'
+import type { School } from '@/lib/schools-schema'
+import type { DbBlueprint } from '@/lib/blueprints'
 import {
   AdminPageHeader,
   AdminCard,
@@ -28,6 +30,7 @@ type FormState = {
   day: string
   time: string
   durationMins: string
+  venueSchoolId: string
   sortOrder: string
   active: boolean
 }
@@ -40,6 +43,7 @@ const EMPTY_FORM: FormState = {
   day: 'Thursday',
   time: '',
   durationMins: '30',
+  venueSchoolId: '',
   sortOrder: '0',
   active: true,
 }
@@ -53,6 +57,7 @@ function toForm(c: DbClass): FormState {
     day: c.day,
     time: c.time,
     durationMins: String(c.duration_mins),
+    venueSchoolId: c.venue_school_id ?? '',
     sortOrder: String(c.sort_order),
     active: c.active,
   }
@@ -61,14 +66,20 @@ function toForm(c: DbClass): FormState {
 export default function ClassesPage() {
   const toast = useToast()
   const [classes, setClasses] = useState<DbClass[]>([])
+  const [venues, setVenues] = useState<School[]>([])
+  const [blueprints, setBlueprints] = useState<DbBlueprint[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const [editId, setEditId] = useState<string | null>(null) // null = closed, 'new' = create
+  const [editId, setEditId] = useState<string | null>(null)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [deleteRow, setDeleteRow] = useState<DbClass | null>(null)
   const [deleting, setDeleting] = useState(false)
+
+  const [blueprintModalOpen, setBlueprintModalOpen] = useState(false)
+  const [blueprintForm, setBlueprintForm] = useState({ venueId: '', blueprintId: '' })
+  const [blueprintSaving, setBlueprintSaving] = useState(false)
 
   const authHeaders = useCallback(async () => {
     const { data: session } = await getSupabase().auth.getSession()
@@ -81,16 +92,32 @@ export default function ClassesPage() {
     try {
       setLoading(true)
       const headers = await authHeaders()
-      const res = await fetch('/api/admin/classes', { headers })
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
+      const [classesRes, venuesRes, blueprintsRes] = await Promise.all([
+        fetch('/api/admin/classes', { headers }),
+        fetch('/api/admin/schools', { headers }),
+        fetch('/api/admin/class-blueprints', { headers }),
+      ])
+      if (!classesRes.ok) {
+        const data = await classesRes.json().catch(() => ({}))
         throw new Error(data.error || 'Failed to load classes')
       }
-      const data = await res.json()
-      setClasses((data.classes ?? []) as DbClass[])
+      if (!venuesRes.ok) {
+        const data = await venuesRes.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to load venues')
+      }
+      if (!blueprintsRes.ok) {
+        const data = await blueprintsRes.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to load blueprints')
+      }
+      const classesData = await classesRes.json()
+      const venuesData = await venuesRes.json()
+      const blueprintsData = await blueprintsRes.json()
+      setClasses((classesData.classes ?? []) as DbClass[])
+      setVenues((venuesData.schools ?? []) as School[])
+      setBlueprints((blueprintsData.blueprints ?? []) as DbBlueprint[])
       setError(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load classes')
+      setError(err instanceof Error ? err.message : 'Failed to load data')
     } finally {
       setLoading(false)
     }
@@ -99,6 +126,11 @@ export default function ClassesPage() {
   useEffect(() => {
     load()
   }, [load])
+
+  const venueName = (id: string | null): string => {
+    if (!id) return 'No venue'
+    return venues.find((v) => v.id === id)?.name ?? 'Unknown'
+  }
 
   const openCreate = () => {
     setForm(EMPTY_FORM)
@@ -139,6 +171,7 @@ export default function ClassesPage() {
       day: form.day.trim(),
       time: form.time.trim(),
       durationMins: Number(form.durationMins) || 30,
+      venueSchoolId: form.venueSchoolId || null,
       sortOrder: Number(form.sortOrder) || 0,
       active: form.active,
     }
@@ -165,6 +198,37 @@ export default function ClassesPage() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to save class')
       setSaving(false)
+    }
+  }
+
+  const saveBlueprintClass = async () => {
+    if (!blueprintForm.venueId || !blueprintForm.blueprintId) {
+      toast.error('Venue and blueprint are required')
+      return
+    }
+    try {
+      setBlueprintSaving(true)
+      const headers = await authHeaders()
+      const res = await fetch('/api/admin/classes', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          fromBlueprintId: blueprintForm.blueprintId,
+          venueSchoolId: blueprintForm.venueId,
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to create class from blueprint')
+      }
+      toast.success('Class created from blueprint')
+      setBlueprintModalOpen(false)
+      setBlueprintForm({ venueId: '', blueprintId: '' })
+      await load()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to create class from blueprint')
+    } finally {
+      setBlueprintSaving(false)
     }
   }
 
@@ -206,6 +270,7 @@ export default function ClassesPage() {
     { key: 'day', header: 'Day', render: (c) => c.day },
     { key: 'time', header: 'Time', render: (c) => c.time },
     { key: 'duration', header: 'Mins', align: 'right', render: (c) => c.duration_mins },
+    { key: 'venue', header: 'Venue', render: (c) => venueName(c.venue_school_id) },
     {
       key: 'active',
       header: 'Status',
@@ -245,9 +310,14 @@ export default function ClassesPage() {
         title="Classes"
         description="The live class lineup. Edits here update booking, dashboard and admin screens without a deploy."
         actions={
-          <Button variant="primary" onClick={openCreate}>
-            Add class
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={() => setBlueprintModalOpen(true)}>
+              Add from blueprint
+            </Button>
+            <Button variant="primary" onClick={openCreate}>
+              Add class
+            </Button>
+          </div>
         }
       />
 
@@ -262,13 +332,6 @@ export default function ClassesPage() {
         />
       </AdminCard>
 
-      <AdminCard>
-        <h3 className="font-heading text-base font-bold text-charcoal">Venue</h3>
-        <p className="mt-2 text-sm text-charcoal-light">
-          The venue shown on booking and confirmation screens is the default active venue,
-          managed under <span className="font-600">Schools</span>. New classes inherit it.
-        </p>
-      </AdminCard>
 
       <Modal
         open={editId !== null}
@@ -341,6 +404,19 @@ export default function ClassesPage() {
               />
             </FormField>
           </div>
+          <FormField label="Venue">
+            <Select
+              value={form.venueSchoolId}
+              onChange={(e) => setField('venueSchoolId', e.target.value)}
+            >
+              <option value="">No venue</option>
+              {venues.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.name}
+                </option>
+              ))}
+            </Select>
+          </FormField>
           <div className="grid grid-cols-3 gap-4">
             <FormField label="Duration (mins)">
               <Input
@@ -366,6 +442,54 @@ export default function ClassesPage() {
               </Select>
             </FormField>
           </div>
+        </div>
+      </Modal>
+
+      <Modal
+        open={blueprintModalOpen}
+        onClose={() => {
+          setBlueprintModalOpen(false)
+          setBlueprintForm({ venueId: '', blueprintId: '' })
+        }}
+        title="Add class from blueprint"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setBlueprintModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={saveBlueprintClass} loading={blueprintSaving}>
+              Create class
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <FormField label="Venue *">
+            <Select
+              value={blueprintForm.venueId}
+              onChange={(e) => setBlueprintForm({ ...blueprintForm, venueId: e.target.value })}
+            >
+              <option value="">Select a venue</option>
+              {venues.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.name}
+                </option>
+              ))}
+            </Select>
+          </FormField>
+          <FormField label="Blueprint *">
+            <Select
+              value={blueprintForm.blueprintId}
+              onChange={(e) => setBlueprintForm({ ...blueprintForm, blueprintId: e.target.value })}
+            >
+              <option value="">Select a blueprint</option>
+              {blueprints.filter((b) => b.active).map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                </option>
+              ))}
+            </Select>
+          </FormField>
         </div>
       </Modal>
 

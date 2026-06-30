@@ -181,9 +181,9 @@ export default function SchoolsPage() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        title="Schools"
-        description="Manage all school venues and contacts"
-        actions={<Button onClick={openCreate}>Add school</Button>}
+        title="Venues"
+        description="Manage your venues and the classes that run at each one."
+        actions={<Button onClick={openCreate}>Add venue</Button>}
       />
 
       <AdminCard>
@@ -197,9 +197,9 @@ export default function SchoolsPage() {
           </div>
         ) : schools.length === 0 ? (
           <EmptyState
-            title="No schools yet"
-            description="Add a school to start managing venues and contacts."
-            action={<Button onClick={openCreate}>Add school</Button>}
+            title="No venues yet"
+            description="Add a venue to start managing classes and contacts."
+            action={<Button onClick={openCreate}>Add venue</Button>}
           />
         ) : (
           <div className="overflow-x-auto">
@@ -234,9 +234,18 @@ export default function SchoolsPage() {
                       </button>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <Button variant="ghost" size="sm" onClick={() => openEdit(school)}>
-                        Edit
-                      </Button>
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => router.push(`/admin/schools/${school.id}`)}
+                        >
+                          Manage
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => openEdit(school)}>
+                          Edit
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}

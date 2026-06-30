@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireAdmin } from '@/lib/admin-auth'
 import { auditLog } from '@/lib/audit-log'
-import { updateClass, deleteClass, type ClassInput } from '@/lib/classes'
+import { updateBlueprint, deleteBlueprint, type BlueprintInput } from '@/lib/blueprints'
 
-const classUpdateSchema = z
+const blueprintUpdateSchema = z
   .object({
     slug: z
       .string()
@@ -13,11 +13,9 @@ const classUpdateSchema = z
     name: z.string().min(1),
     ages: z.string().min(1),
     ageMax: z.number().int().min(0).max(18),
-    day: z.string().min(1),
-    time: z.string().min(1),
-    durationMins: z.number().int().min(1).max(600),
-    venueSchoolId: z.string().uuid().nullable(),
-    blueprintId: z.string().uuid().nullable(),
+    defaultDay: z.string().nullable(),
+    defaultTime: z.string().nullable(),
+    defaultDurationMins: z.number().int().min(1).max(600),
     sortOrder: z.number().int(),
     active: z.boolean(),
   })
@@ -35,38 +33,34 @@ export async function PATCH(
 
     const { id } = await params
     const body = await request.json()
-    const validated = classUpdateSchema.parse(body)
+    const validated = blueprintUpdateSchema.parse(body)
 
-    const patch: Partial<ClassInput> = {}
-    for (const key of Object.keys(validated) as (keyof ClassInput)[]) {
+    const patch: Partial<BlueprintInput> = {}
+    for (const key of Object.keys(validated) as (keyof BlueprintInput)[]) {
       const value = validated[key]
       if (value !== undefined) {
-        // value is a validated union member for its key; assign through.
         ;(patch as Record<string, unknown>)[key] = value
       }
     }
 
     if (Object.keys(patch).length === 0) {
-      return NextResponse.json(
-        { error: 'No fields to update' },
-        { status: 400 },
-      )
+      return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
     }
 
     try {
-      await updateClass(id, patch)
+      await updateBlueprint(id, patch)
     } catch (err) {
       const msg = err instanceof Error ? err.message : ''
-      if (msg.includes('classes_venue_slug_key') || msg.includes('duplicate key')) {
+      if (msg.includes('class_blueprints_slug_key') || msg.includes('duplicate key')) {
         return NextResponse.json(
-          { error: 'This venue already has a class with that slug.' },
+          { error: 'A blueprint with that slug already exists.' },
           { status: 409 },
         )
       }
       throw err
     }
 
-    await auditLog(auth.userId, 'class.updated', 'class', id, patch)
+    await auditLog(auth.userId, 'blueprint.updated', 'class_blueprint', id, patch)
 
     return NextResponse.json({ ok: true })
   } catch (error) {
@@ -98,9 +92,9 @@ export async function DELETE(
     }
 
     const { id } = await params
-    await deleteClass(id)
+    await deleteBlueprint(id)
 
-    await auditLog(auth.userId, 'class.deleted', 'class', id, {})
+    await auditLog(auth.userId, 'blueprint.deleted', 'class_blueprint', id, {})
 
     return NextResponse.json({ ok: true })
   } catch (error) {

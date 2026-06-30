@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireAdmin } from '@/lib/admin-auth'
 import { auditLog } from '@/lib/audit-log'
-import { getAllClasses, createClass } from '@/lib/classes'
+import { getAllClasses, createClass, createClassFromBlueprint } from '@/lib/classes'
 
 const classCreateSchema = z.object({
   slug: z
@@ -16,9 +16,21 @@ const classCreateSchema = z.object({
   time: z.string().min(1),
   durationMins: z.number().int().min(1).max(600).optional(),
   venueSchoolId: z.string().uuid().nullable().optional(),
+  blueprintId: z.string().uuid().nullable().optional(),
   sortOrder: z.number().int().optional(),
   active: z.boolean().optional(),
 })
+
+// Snapshot-copy a blueprint onto a venue (creates a fresh, fully-editable class).
+const fromBlueprintSchema = z.object({
+  fromBlueprintId: z.string().uuid(),
+  venueSchoolId: z.string().uuid(),
+})
+
+function isVenueSlugConflict(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : ''
+  return msg.includes('classes_venue_slug_key') || msg.includes('duplicate key')
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -45,16 +57,51 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+
+    // From-blueprint path: snapshot-copy a blueprint onto a venue.
+    if (body && typeof body === 'object' && 'fromBlueprintId' in body) {
+      const { fromBlueprintId, venueSchoolId } = fromBlueprintSchema.parse(body)
+      try {
+        const created = await createClassFromBlueprint(venueSchoolId, fromBlueprintId)
+        await auditLog(auth.userId, 'class.created', 'class', created.id, {
+          slug: created.slug,
+          name: created.name,
+          fromBlueprintId,
+          venueSchoolId,
+        })
+        return NextResponse.json({ class: created }, { status: 201 })
+      } catch (err) {
+        if (isVenueSlugConflict(err)) {
+          return NextResponse.json(
+            {
+              error:
+                'This venue already has a class with that slug. Edit the existing class or add a custom one.',
+            },
+            { status: 409 },
+          )
+        }
+        throw err
+      }
+    }
+
     const validated = classCreateSchema.parse(body)
 
-    const created = await createClass(validated)
-
-    await auditLog(auth.userId, 'class.created', 'class', created.id, {
-      slug: created.slug,
-      name: created.name,
-    })
-
-    return NextResponse.json({ class: created }, { status: 201 })
+    try {
+      const created = await createClass(validated)
+      await auditLog(auth.userId, 'class.created', 'class', created.id, {
+        slug: created.slug,
+        name: created.name,
+      })
+      return NextResponse.json({ class: created }, { status: 201 })
+    } catch (err) {
+      if (isVenueSlugConflict(err)) {
+        return NextResponse.json(
+          { error: 'This venue already has a class with that slug.' },
+          { status: 409 },
+        )
+      }
+      throw err
+    }
   } catch (error) {
     if (error instanceof z.ZodError) {
       const issues = error.issues || []

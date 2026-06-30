@@ -8,6 +8,7 @@
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { CLASSES, VENUE } from './constants'
+import { getBlueprintById } from './blueprints'
 
 export type ClassInfo = {
   name: string
@@ -35,6 +36,7 @@ export type DbClass = {
   time: string
   duration_mins: number
   venue_school_id: string | null
+  blueprint_id: string | null
   sort_order: number
   active: boolean
   created_at: string
@@ -66,13 +68,19 @@ function rowToInfo(row: DbClass): ClassInfo {
 // ─── Reads (with constants fallback) ───
 
 // Active classes keyed by slug, shaped exactly like the CLASSES constant.
-// Falls back to constants on any error or empty result.
+// SCOPED TO THE PRIMARY VENUE (Grove) so the public booking layer stays
+// single-venue this pass: classes Jessica adds to other venues never leak into
+// /book /classes /timetable. Multi-venue public booking is a separate follow-up.
+// Falls back to constants on any error, missing venue, or empty result.
 export async function getClassesMap(): Promise<ClassMap> {
   try {
+    const venueId = await getPrimaryVenueId()
+    if (!venueId) return { ...CLASSES }
     const { data, error } = await db()
       .from('classes')
       .select('*')
       .eq('active', true)
+      .eq('venue_school_id', venueId)
       .order('sort_order', { ascending: true })
     if (error || !data || data.length === 0) return { ...CLASSES }
     const map: ClassMap = {}
@@ -80,6 +88,42 @@ export async function getClassesMap(): Promise<ClassMap> {
     return map
   } catch {
     return { ...CLASSES }
+  }
+}
+
+// All classes (incl. inactive) for one venue, for the admin venue detail view.
+export async function getClassesByVenue(venueId: string): Promise<DbClass[]> {
+  const { data, error } = await db()
+    .from('classes')
+    .select('*')
+    .eq('venue_school_id', venueId)
+    .order('active', { ascending: false })
+    .order('sort_order', { ascending: true })
+  if (error) throw new Error(`Failed to load venue classes: ${error.message}`)
+  return (data ?? []) as DbClass[]
+}
+
+// The primary (default) venue id: the seeded Grove school, else the first active
+// school, else null. The public booking layer + getClassesMap are scoped to this
+// single venue (see getClassesMap). Mirrors getDefaultSchoolId in schools.ts.
+export async function getPrimaryVenueId(): Promise<string | null> {
+  try {
+    const grove = await db()
+      .from('schools')
+      .select('id')
+      .eq('slug', 'grove-neighbourhood-centre')
+      .maybeSingle()
+    if (grove.data) return (grove.data as { id: string }).id
+    const firstActive = await db()
+      .from('schools')
+      .select('id')
+      .eq('active', true)
+      .order('name', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+    return (firstActive.data as { id: string } | null)?.id ?? null
+  } catch {
+    return null
   }
 }
 
@@ -153,6 +197,7 @@ export type ClassInput = {
   time: string
   durationMins?: number
   venueSchoolId?: string | null
+  blueprintId?: string | null
   sortOrder?: number
   active?: boolean
 }
@@ -169,6 +214,7 @@ export async function createClass(input: ClassInput): Promise<DbClass> {
       time: input.time,
       duration_mins: input.durationMins ?? 30,
       venue_school_id: input.venueSchoolId ?? null,
+      blueprint_id: input.blueprintId ?? null,
       sort_order: input.sortOrder ?? 0,
       active: input.active ?? true,
     })
@@ -176,6 +222,31 @@ export async function createClass(input: ClassInput): Promise<DbClass> {
     .single()
   if (error) throw new Error(`Failed to create class: ${error.message}`)
   return data as DbClass
+}
+
+// Stamp a blueprint onto a venue: COPIES the blueprint's CURRENT values into a
+// fresh, fully-editable class row (snapshot). blueprint_id is stored as provenance
+// only; later blueprint edits do NOT cascade. Throws if the venue already has a
+// class with that slug (per-venue unique constraint) -> surfaced as 409 by the API.
+export async function createClassFromBlueprint(
+  venueId: string,
+  blueprintId: string,
+): Promise<DbClass> {
+  const bp = await getBlueprintById(blueprintId)
+  if (!bp) throw new Error('Blueprint not found')
+  return createClass({
+    slug: bp.slug,
+    name: bp.name,
+    ages: bp.ages,
+    ageMax: bp.age_max,
+    day: bp.default_day ?? '',
+    time: bp.default_time ?? '',
+    durationMins: bp.default_duration_mins,
+    venueSchoolId: venueId,
+    blueprintId: bp.id,
+    sortOrder: bp.sort_order,
+    active: true,
+  })
 }
 
 export async function updateClass(
@@ -191,6 +262,7 @@ export async function updateClass(
   if (patch.time !== undefined) row.time = patch.time
   if (patch.durationMins !== undefined) row.duration_mins = patch.durationMins
   if (patch.venueSchoolId !== undefined) row.venue_school_id = patch.venueSchoolId
+  if (patch.blueprintId !== undefined) row.blueprint_id = patch.blueprintId
   if (patch.sortOrder !== undefined) row.sort_order = patch.sortOrder
   if (patch.active !== undefined) row.active = patch.active
   const { error } = await db().from('classes').update(row).eq('id', id)
