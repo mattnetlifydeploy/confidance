@@ -3,6 +3,16 @@
 import { useState, useEffect, useCallback } from 'react'
 import { TERMS, getCurrentTerm, getNextTerm, getTermSessionDates } from '@/lib/constants'
 import { getSupabase } from '@/lib/supabase'
+import {
+  AdminCard,
+  AdminPageHeader,
+  Button,
+  ConfirmDialog,
+  FormField,
+  Input,
+  StatusBadge,
+  useToast,
+} from '@/components/admin'
 
 type TermExclusion = {
   id: string
@@ -22,6 +32,7 @@ function formatDate(iso: string): string {
 }
 
 export default function TermsPage() {
+  const toast = useToast()
   const current = getCurrentTerm()
   const next = getNextTerm()
   const todayIso = new Date().toISOString().slice(0, 10)
@@ -31,7 +42,9 @@ export default function TermsPage() {
   const [expandedTerm, setExpandedTerm] = useState<string | null>(null)
   const [addingExclusionFor, setAddingExclusionFor] = useState<string | null>(null)
   const [newExclusionForm, setNewExclusionForm] = useState({ date: '', reason: '' })
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [pendingDelete, setPendingDelete] = useState<TermExclusion | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const loadExclusions = useCallback(async () => {
     try {
@@ -57,11 +70,12 @@ export default function TermsPage() {
 
   const handleAddExclusion = async (termName: string, termYear: number) => {
     if (!newExclusionForm.date) {
-      setMessage({ type: 'error', text: 'Please select a date' })
+      toast.error('Please select a date')
       return
     }
 
     try {
+      setSaving(true)
       const { data: session } = await getSupabase().auth.getSession()
       if (!session?.session?.access_token) {
         throw new Error('Not authenticated')
@@ -71,7 +85,7 @@ export default function TermsPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.session.access_token}`,
+          Authorization: `Bearer ${session.session.access_token}`,
         },
         body: JSON.stringify({
           term_name: termName,
@@ -86,20 +100,21 @@ export default function TermsPage() {
         throw new Error(errData.error || 'Failed to add exclusion')
       }
 
-      setMessage({ type: 'success', text: 'Exclusion added' })
+      toast.success('Exclusion added')
       setNewExclusionForm({ date: '', reason: '' })
       setAddingExclusionFor(null)
       await loadExclusions()
     } catch (err) {
-      setMessage({
-        type: 'error',
-        text: err instanceof Error ? err.message : 'Failed to add exclusion',
-      })
+      toast.error(err instanceof Error ? err.message : 'Failed to add exclusion')
+    } finally {
+      setSaving(false)
     }
   }
 
-  const handleDeleteExclusion = async (exclusionId: string) => {
+  const handleDeleteExclusion = async () => {
+    if (!pendingDelete) return
     try {
+      setDeleting(true)
       const { data: session } = await getSupabase().auth.getSession()
       if (!session?.session?.access_token) {
         throw new Error('Not authenticated')
@@ -109,9 +124,9 @@ export default function TermsPage() {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.session.access_token}`,
+          Authorization: `Bearer ${session.session.access_token}`,
         },
-        body: JSON.stringify({ id: exclusionId }),
+        body: JSON.stringify({ id: pendingDelete.id }),
       })
 
       if (!res.ok) {
@@ -119,41 +134,30 @@ export default function TermsPage() {
         throw new Error(errData.error || 'Failed to delete exclusion')
       }
 
-      setMessage({ type: 'success', text: 'Exclusion removed' })
+      toast.success('Exclusion removed')
+      setPendingDelete(null)
       await loadExclusions()
     } catch (err) {
-      setMessage({
-        type: 'error',
-        text: err instanceof Error ? err.message : 'Failed to delete exclusion',
-      })
+      toast.error(err instanceof Error ? err.message : 'Failed to delete exclusion')
+    } finally {
+      setDeleting(false)
     }
   }
 
   const getTermExclusions = (termName: string, termYear: number) =>
     exclusions.filter((e) => e.term_name === termName && e.term_year === termYear)
 
-  const termKey = (t: any) => `${t.year}-${t.name}`
+  const termKey = (t: (typeof TERMS)[number]) => `${t.year}-${t.name}`
 
   return (
     <div className="mt-6 space-y-4">
-      <div className="rounded-3xl bg-white p-6 shadow-sm card-glow">
-        <h2 className="font-heading text-xl font-bold">Terms</h2>
-        <p className="mt-1 text-sm text-warm-gray">
-          Term schedule from 2026 to 2029. Highlighted: current and next.
-        </p>
-      </div>
-
-      {message && (
-        <div
-          className={`rounded-3xl px-6 py-4 shadow-sm card-glow ${
-            message.type === 'success'
-              ? 'bg-green-50 text-green-700'
-              : 'bg-red-50 text-red-700'
-          }`}
-        >
-          <p className="text-sm">{message.text}</p>
-        </div>
-      )}
+      <AdminCard>
+        <AdminPageHeader
+          eyebrow="Schedule"
+          title="Terms"
+          description="Term schedule from 2026 to 2029. Highlighted: current and next. Add per-term excluded dates below."
+        />
+      </AdminCard>
 
       <div className="space-y-3">
         {TERMS.map((t) => {
@@ -168,11 +172,11 @@ export default function TermsPage() {
           return (
             <div
               key={termKey(t)}
-              className={`rounded-3xl p-6 shadow-sm card-glow ${
+              className={`card-bezel rounded-3xl p-6 ${
                 isCurrent
-                  ? 'bg-coral/10 ring-2 ring-coral'
+                  ? 'bg-teal/10 ring-2 ring-teal'
                   : isNext
-                  ? 'bg-lilac/10 ring-2 ring-lilac'
+                  ? 'bg-navy-light/10 ring-2 ring-navy-light'
                   : isPast
                   ? 'bg-cream/50 opacity-70'
                   : 'bg-white'
@@ -184,55 +188,41 @@ export default function TermsPage() {
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <h3 className="font-heading text-lg font-bold">
+                    <h3 className="font-heading text-lg font-bold text-navy">
                       {t.name} {t.year}
                     </h3>
-                    <p className="text-sm text-warm-gray">
+                    <p className="text-sm text-charcoal-light">
                       {formatDate(t.startDate)} to {formatDate(t.endDate)}
                     </p>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {isCurrent && (
-                      <span className="rounded-full bg-coral px-3 py-1 text-xs font-600 text-white">
-                        Current
-                      </span>
-                    )}
-                    {isNext && (
-                      <span className="rounded-full bg-lilac px-3 py-1 text-xs font-600 text-white">
-                        Next
-                      </span>
-                    )}
-                    <span className="rounded-full bg-white/60 px-3 py-1 text-xs font-600 text-warm-gray">
-                      {sessionDates.length} sessions
-                    </span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {isCurrent && <StatusBadge label="Current" tone="teal" />}
+                    {isNext && <StatusBadge label="Next" tone="info" />}
+                    <StatusBadge label={`${sessionDates.length} sessions`} tone="neutral" />
                     {!isPast && (
-                      <span className="rounded-full bg-white/60 px-3 py-1 text-xs font-600 text-warm-gray">
-                        {upcomingCount} upcoming
-                      </span>
+                      <StatusBadge label={`${upcomingCount} upcoming`} tone="neutral" />
                     )}
                     {termExclusions.length > 0 && (
-                      <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-600 text-orange-700">
-                        {termExclusions.length} excluded
-                      </span>
+                      <StatusBadge label={`${termExclusions.length} excluded`} tone="warning" />
                     )}
                   </div>
                 </div>
               </button>
 
               {t.noClassDates.length > 0 && (
-                <p className="mt-3 text-xs text-warm-gray">
+                <p className="mt-3 text-xs text-charcoal-light">
                   Hardcoded holidays: {t.noClassDates.map(formatDate).join(', ')}
                 </p>
               )}
 
               {isExpanded && (
-                <div className="mt-6 space-y-4 border-t border-border pt-4">
+                <div className="mt-6 space-y-4 border-t border-charcoal/10 pt-4">
                   <div>
-                    <h4 className="font-semibold text-sm">Excluded dates</h4>
+                    <h4 className="text-sm font-semibold text-charcoal">Excluded dates</h4>
                     {loadingExclusions ? (
-                      <p className="mt-2 text-xs text-warm-gray">Loading...</p>
+                      <p className="mt-2 text-xs text-charcoal-light">Loading...</p>
                     ) : termExclusions.length === 0 ? (
-                      <p className="mt-2 text-xs text-warm-gray">None yet</p>
+                      <p className="mt-2 text-xs text-charcoal-light">None yet</p>
                     ) : (
                       <div className="mt-2 space-y-2">
                         {termExclusions.map((exc) => (
@@ -241,77 +231,78 @@ export default function TermsPage() {
                             className="flex items-center justify-between gap-2 rounded-lg bg-white/50 px-3 py-2 text-sm"
                           >
                             <div>
-                              <p className="font-medium">{formatDate(exc.exclusion_date)}</p>
-                              {exc.reason && <p className="text-xs text-warm-gray">{exc.reason}</p>}
+                              <p className="font-medium text-charcoal">
+                                {formatDate(exc.exclusion_date)}
+                              </p>
+                              {exc.reason && (
+                                <p className="text-xs text-charcoal-light">{exc.reason}</p>
+                              )}
                             </div>
-                            <button
-                              onClick={() => handleDeleteExclusion(exc.id)}
-                              className="text-xs font-semibold text-red-600 hover:text-red-800"
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-error hover:bg-error/5"
+                              onClick={() => setPendingDelete(exc)}
                             >
                               Remove
-                            </button>
+                            </Button>
                           </div>
                         ))}
                       </div>
                     )}
                   </div>
 
-                  <div className="border-t border-border pt-4">
-                    <h4 className="font-semibold text-sm">
-                      {addingExclusionFor === termKey(t) ? 'Add exclusion' : 'Add new exclusion'}
-                    </h4>
+                  <div className="border-t border-charcoal/10 pt-4">
                     {addingExclusionFor === termKey(t) ? (
-                      <div className="mt-3 space-y-2">
-                        <div>
-                          <label className="block text-xs font-medium text-warm-gray">Date</label>
-                          <input
+                      <div className="space-y-3">
+                        <FormField label="Date">
+                          <Input
                             type="date"
                             value={newExclusionForm.date}
                             onChange={(e) =>
                               setNewExclusionForm({ ...newExclusionForm, date: e.target.value })
                             }
-                            className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/20"
                           />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-warm-gray">
-                            Reason (optional)
-                          </label>
-                          <input
+                        </FormField>
+                        <FormField label="Reason" hint="Optional">
+                          <Input
                             type="text"
                             value={newExclusionForm.reason}
                             onChange={(e) =>
                               setNewExclusionForm({ ...newExclusionForm, reason: e.target.value })
                             }
                             placeholder="e.g. Bank holiday, venue unavailable"
-                            className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/20"
                           />
-                        </div>
+                        </FormField>
                         <div className="flex gap-2">
-                          <button
+                          <Button
+                            size="sm"
+                            loading={saving}
                             onClick={() => handleAddExclusion(t.name, t.year)}
-                            className="rounded-lg bg-coral px-4 py-2 text-xs font-semibold text-white hover:bg-coral/90"
                           >
                             Add
-                          </button>
-                          <button
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            disabled={saving}
                             onClick={() => {
                               setAddingExclusionFor(null)
                               setNewExclusionForm({ date: '', reason: '' })
                             }}
-                            className="rounded-lg border border-border bg-white px-4 py-2 text-xs font-semibold hover:bg-gray-50"
                           >
                             Cancel
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     ) : (
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => setAddingExclusionFor(termKey(t))}
-                        className="mt-2 text-xs font-semibold text-coral hover:text-coral/80"
                       >
-                        + Add date
-                      </button>
+                        + Add excluded date
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -320,6 +311,20 @@ export default function TermsPage() {
           )
         })}
       </div>
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title="Remove excluded date"
+        message={
+          pendingDelete
+            ? `Remove ${formatDate(pendingDelete.exclusion_date)} from this term's exclusions?`
+            : undefined
+        }
+        confirmLabel="Remove"
+        loading={deleting}
+        onConfirm={handleDeleteExclusion}
+        onCancel={() => setPendingDelete(null)}
+      />
     </div>
   )
 }
