@@ -1,4 +1,5 @@
 import { CLASSES, type ClassType } from './constants'
+import type { ClassMap } from './classes'
 
 export type AgeUpBooking = {
   parent_id: string
@@ -36,6 +37,7 @@ export function selectAgeUpCandidates(
   bookings: AgeUpBooking[],
   children: AgeUpChild[],
   currentTerm: { name: string; year: number },
+  classMap: ClassMap = { ...CLASSES },
 ): AgeUpCandidate[] {
   const childMap = new Map(children.map((c) => [c.id, c]))
 
@@ -45,12 +47,13 @@ export function selectAgeUpCandidates(
   for (const booking of bookings) {
     if (booking.status !== 'confirmed') continue
     if (booking.term_name !== currentTerm.name || booking.term_year !== currentTerm.year) continue
-    if (!(booking.class_type in CLASSES)) continue
+    const classInfo = classMap[booking.class_type]
+    if (!classInfo) continue
 
     const child = childMap.get(booking.child_id)
     if (!child) continue
 
-    const ageMax = CLASSES[booking.class_type as ClassType].ageMax
+    const ageMax = classInfo.ageMax
 
     // ageMax is inclusive upper bound: age 4 in baby-boogie (ageMax 4) is NOT over-age
     // Age 5+ IS over-age

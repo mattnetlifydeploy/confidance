@@ -1,7 +1,9 @@
 import { getResend, FROM_ADDRESS } from './resend'
 import { auditLog } from './audit-log'
 import { logAdminMessage } from './admin-messages'
-import { CLASSES, VENUE, CONTACT_EMAIL, TERMS, getTermSessionDates, type ClassType } from './constants'
+import { CLASSES, VENUE, CONTACT_EMAIL, TERMS, getTermSessionDates } from './constants'
+import { getClassesMap, getVenue } from './classes'
+import type { ClassInfo, ClassMap, Venue } from './classes'
 
 export const BOOKING_CONFIRMATION_SUBJECT = 'Your Confidance booking is confirmed'
 
@@ -29,12 +31,7 @@ export function formatSessionDate(iso: string): string {
   }).format(d)
 }
 
-function classMeta(classType: string) {
-  return CLASSES[classType as ClassType] ?? null
-}
-
-function buildWhenSection(booking: ConfirmationBooking, sessionDate?: string | null): string {
-  const meta = classMeta(booking.class_type)
+function buildWhenSection(booking: ConfirmationBooking, meta: ClassInfo | null, sessionDate?: string | null): string {
   const schedule = meta ? `${meta.day}s, ${meta.time}` : 'see timetable'
 
   if (booking.booking_type === 'term' && booking.term_name && booking.term_year != null) {
@@ -60,8 +57,10 @@ export function formatBookingConfirmation(
   child: ConfirmationChild,
   parent: ConfirmationParent,
   sessionDate?: string | null,
+  classes: ClassMap = { ...CLASSES },
+  venue: Venue = { ...VENUE },
 ): { subject: string; text: string } {
-  const meta = classMeta(booking.class_type)
+  const meta = classes[booking.class_type] ?? null
   const className = meta ? meta.name : booking.class_type
   const greetingName = parent.full_name || 'there'
   const trialTag = booking.booking_type === 'trial' ? ' (free trial)' : ''
@@ -73,8 +72,8 @@ Your Confidance booking is confirmed.
 
 Class: ${className}${trialTag}
 Child: ${child.name}
-${buildWhenSection(booking, sessionDate)}
-Venue: ${VENUE.name}, ${VENUE.address}
+${buildWhenSection(booking, meta, sessionDate)}
+Venue: ${venue.name}, ${venue.address}
 
 What to bring: a water bottle and comfy clothes your child can move and dance in.
 
@@ -102,7 +101,8 @@ export async function sendBookingConfirmation(
 ): Promise<void> {
   try {
     if (!parent.email) return
-    const { subject, text } = formatBookingConfirmation(booking, child, parent, sessionDate)
+    const [classes, venue] = await Promise.all([getClassesMap(), getVenue()])
+    const { subject, text } = formatBookingConfirmation(booking, child, parent, sessionDate, classes, venue)
     const resend = getResend()
     const result = await resend.emails.send({
       from: FROM_ADDRESS,

@@ -282,7 +282,7 @@ export default function DashboardPage() {
                     ? nextSessionDate(booking.term_name, booking.term_year, today)
                     : null
                   const sessionDisplay = nextSession
-                    ? formatFullSession(nextSession, booking.class_type)
+                    ? formatFullSession(nextSession, booking.class_type, CLASSES)
                     : `${CLASSES[booking.class_type as keyof typeof CLASSES]?.day || 'Thursday'}, ${CLASSES[booking.class_type as keyof typeof CLASSES]?.time || 'TBA'}`
 
                   return (

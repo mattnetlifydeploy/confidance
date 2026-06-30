@@ -4,6 +4,7 @@ import { requireCronSecret } from '@/lib/cron-auth'
 import { getResend, FROM_ADDRESS } from '@/lib/resend'
 import { logAdminMessage } from '@/lib/admin-messages'
 import { selectRemindersForDate, formatReminderEmail, type ReminderBooking } from '@/lib/booking-reminders'
+import { getClassesMap, getVenue } from '@/lib/classes'
 
 const supabaseUrl = process.env.SUPABASE_URL
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -72,6 +73,8 @@ async function runJob(request: NextRequest) {
     const childMap = new Map(children.map((c) => [c.id, { name: c.name }]))
     const profileMap = new Map(profiles.map((p) => [p.id, { email: p.email, full_name: p.full_name }]))
 
+    const [classMap, venue] = await Promise.all([getClassesMap(), getVenue()])
+
     const emailList: Array<{
       from: string
       to: string
@@ -87,7 +90,7 @@ async function runJob(request: NextRequest) {
         continue
       }
 
-      const { subject, body } = formatReminderEmail(booking, child, parent)
+      const { subject, body } = formatReminderEmail(booking, child, parent, classMap, venue)
 
       emailList.push({
         from: FROM_ADDRESS,

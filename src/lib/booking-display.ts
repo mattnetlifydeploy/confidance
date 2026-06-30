@@ -1,4 +1,5 @@
 import { CLASSES, TERMS, getTermSessionDates, type TermDef } from './constants'
+import type { ClassMap } from './classes'
 
 /**
  * Compute the next session date for a term-pass booking.
@@ -19,9 +20,8 @@ export function nextSessionDate(termName: string | null, termYear: number | null
 /**
  * Format class time as "HH:MMam/pm to HH:MMam/pm" e.g. "3:45pm to 4:15pm"
  */
-export function formatSessionTime(classType: string): string {
-  const classInfo = CLASSES[classType as keyof typeof CLASSES]
-  return classInfo?.time || 'TBA'
+export function formatSessionTime(classType: string, classes: ClassMap = { ...CLASSES }): string {
+  return classes[classType]?.time || 'TBA'
 }
 
 /**
@@ -39,9 +39,9 @@ export function formatSessionDate(isoDate: string): string {
 /**
  * Format full session display: "Thursday 9 July, 3:45pm to 4:15pm"
  */
-export function formatFullSession(isoDate: string, classType: string): string {
+export function formatFullSession(isoDate: string, classType: string, classes: ClassMap = { ...CLASSES }): string {
   const dateStr = formatSessionDate(isoDate)
-  const timeStr = formatSessionTime(classType)
+  const timeStr = formatSessionTime(classType, classes)
   return `${dateStr}, ${timeStr}`
 }
 

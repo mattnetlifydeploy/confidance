@@ -1,7 +1,9 @@
 import { getResend, FROM_ADDRESS } from './resend'
 import { auditLog } from './audit-log'
 import { logAdminMessage } from './admin-messages'
-import { CONTACT_EMAIL, CLASSES, type ClassType } from './constants'
+import { CONTACT_EMAIL, CLASSES } from './constants'
+import { getClassesMap } from './classes'
+import type { ClassMap } from './classes'
 
 export type PaymentFailedBooking = {
   id: string
@@ -14,17 +16,14 @@ export type PaymentFailedBooking = {
 export type PaymentFailedChild = { name: string }
 export type PaymentFailedParent = { email: string; full_name: string | null }
 
-function classMeta(classType: string) {
-  return CLASSES[classType as ClassType] ?? null
-}
-
 export function formatPaymentFailed(
   booking: PaymentFailedBooking,
   child: PaymentFailedChild,
   parent: PaymentFailedParent,
   billingPortalUrl: string | null,
+  classes: ClassMap = { ...CLASSES },
 ): { subject: string; text: string } {
-  const meta = classMeta(booking.class_type)
+  const meta = classes[booking.class_type] ?? null
   const className = meta ? meta.name : booking.class_type
   const greetingName = parent.full_name || 'there'
   const amount = `£${(booking.amount_paid_pence / 100).toFixed(2)}`
@@ -63,7 +62,8 @@ export async function sendPaymentFailedEmail(
 ): Promise<void> {
   try {
     if (!parent.email) return
-    const { subject, text } = formatPaymentFailed(booking, child, parent, billingPortalUrl)
+    const classes = await getClassesMap()
+    const { subject, text } = formatPaymentFailed(booking, child, parent, billingPortalUrl, classes)
     const resend = getResend()
     const result = await resend.emails.send({
       from: FROM_ADDRESS,

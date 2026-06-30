@@ -3,7 +3,7 @@ import Image from 'next/image'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getSchoolBySlug } from '@/lib/schools'
-import { CLASSES } from '@/lib/constants'
+import { getClassesMap } from '@/lib/classes'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,6 +26,8 @@ export default async function SchoolDetailPage({ params }: { params: Promise<{ s
   if (!school) {
     notFound()
   }
+
+  const classes = await getClassesMap()
 
   return (
     <>
@@ -75,7 +77,7 @@ export default async function SchoolDetailPage({ params }: { params: Promise<{ s
           </div>
 
           <div className="mt-12 grid gap-6 sm:grid-cols-2">
-            {Object.entries(CLASSES).map(([key, classInfo], i) => (
+            {Object.entries(classes).map(([key, classInfo], i) => (
               <div
                 key={key}
                 className={`reveal stagger-${(i % 4) + 1} card-bezel rounded-2xl border border-border bg-white p-8`}

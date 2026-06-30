@@ -1,5 +1,6 @@
-import { CLASSES, VENUE, TERMS, type ClassType, type TermDef } from './constants'
+import { CLASSES, VENUE, TERMS } from './constants'
 import { getTermSessions } from './term-sessions'
+import type { ClassMap, Venue } from './classes'
 
 export type ReminderBooking = {
   id: string
@@ -82,8 +83,10 @@ export function formatReminderEmail(
   booking: ReminderBooking,
   child: ReminderChild,
   parent: ReminderParent,
+  classes: ClassMap = { ...CLASSES },
+  venue: Venue = { ...VENUE },
 ): { subject: string; body: string } {
-  const classMeta = CLASSES[booking.class_type as ClassType]
+  const classMeta = classes[booking.class_type]
   const className = classMeta?.name ?? booking.class_type
   const dayTime = classMeta ? `${classMeta.day}, ${classMeta.time}` : 'see timetable'
 
@@ -93,7 +96,7 @@ export function formatReminderEmail(
 
 Just a friendly reminder that ${child.name} has ${className} tomorrow (${dayTime}).
 
-Venue: ${VENUE.name}, ${VENUE.address}
+Venue: ${venue.name}, ${venue.address}
 
 Please bring water and comfy clothes your child can move and dance in.
 

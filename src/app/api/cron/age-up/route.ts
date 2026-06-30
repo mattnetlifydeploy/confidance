@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireCronSecret } from '@/lib/cron-auth'
-import { getCurrentTerm, CLASSES } from '@/lib/constants'
+import { getCurrentTerm } from '@/lib/constants'
+import { getClassesMap } from '@/lib/classes'
 import { getResend, FROM_ADDRESS } from '@/lib/resend'
 import { logAdminMessage } from '@/lib/admin-messages'
 import { selectAgeUpCandidates, type AgeUpBooking, type AgeUpChild } from '@/lib/age-up'
@@ -23,6 +24,7 @@ async function runJob(request: NextRequest) {
     }
 
     const current = getCurrentTerm()
+    const classMap = await getClassesMap()
 
     const { data: bookings, error: bErr } = await supabase
       .from('bookings')
@@ -56,7 +58,7 @@ async function runJob(request: NextRequest) {
       )
     }
 
-    const candidates = selectAgeUpCandidates(bookings as AgeUpBooking[], children as AgeUpChild[], current)
+    const candidates = selectAgeUpCandidates(bookings as AgeUpBooking[], children as AgeUpChild[], current, classMap)
 
     if (candidates.length === 0) {
       return NextResponse.json({ sent: 0, candidates: 0 })
@@ -94,15 +96,17 @@ async function runJob(request: NextRequest) {
       if (!profile?.email) continue
 
       const parentName = profile.full_name || 'there'
-      const currentClassName = CLASSES[candidate.current_class].name
-      const currentAgeMax = CLASSES[candidate.current_class].ageMax
+      const currentMeta = classMap[candidate.current_class]
+      const currentClassName = currentMeta?.name ?? candidate.current_class
+      const currentAgeMax = currentMeta?.ageMax ?? 0
 
       let subject: string
       let body: string
 
-      if (candidate.suggested_class) {
-        const suggestedClassName = CLASSES[candidate.suggested_class].name
-        const suggestedAges = CLASSES[candidate.suggested_class].ages
+      const suggestedMeta = candidate.suggested_class ? classMap[candidate.suggested_class] : null
+      if (suggestedMeta) {
+        const suggestedClassName = suggestedMeta.name
+        const suggestedAges = suggestedMeta.ages
 
         subject = `${candidate.child_name} may be ready for ${suggestedClassName}`
         body = `Hi ${parentName},

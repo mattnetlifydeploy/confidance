@@ -1,7 +1,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
-import { CLASSES, TERMS, type TermDef } from '@/lib/constants'
+import { TERMS, type TermDef } from '@/lib/constants'
 import type { Database, Booking, Attendance } from '@/lib/database.types'
-import type { ClassType } from '@/lib/constants'
+import { getClassesMap } from '@/lib/classes'
 import { formatPence } from '@/lib/refund-formatter'
 import { ExportCsvButton } from '@/components/export-csv-button'
 import { AdminPageHeader, StatTile, StatGrid, AdminCard, EmptyState } from '@/components/admin'
@@ -186,10 +186,6 @@ function sortTermGroups<T extends { termName: string; termYear: number }>(groups
   })
 }
 
-function classLabel(classType: string): string {
-  return CLASSES[classType as ClassType]?.name ?? classType
-}
-
 async function loadRefunds(): Promise<RefundRow[]> {
   const { data: auditLogs, error: auditError } = await supabase
     .from('admin_audit_log')
@@ -274,6 +270,9 @@ async function loadRefunds(): Promise<RefundRow[]> {
 }
 
 export default async function ReportsPage() {
+  const classMap = await getClassesMap()
+  const classLabel = (classType: string): string => classMap[classType]?.name ?? classType
+
   let revenue: RevenueGroup[] = []
   let attendance: AttendanceGroup[] = []
   let fill: FillGroup[] = []

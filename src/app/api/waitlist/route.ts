@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { nextPosition } from '@/lib/waitlist'
 import { getResend, FROM_ADDRESS } from '@/lib/resend'
 import { logAdminMessage } from '@/lib/admin-messages'
-import { CLASSES, ClassType } from '@/lib/constants'
+import { getClassesMap } from '@/lib/classes'
 
 const supabaseAdmin = createClient(
   process.env.SUPABASE_URL || '',
@@ -91,7 +91,8 @@ export async function POST(req: NextRequest) {
       .eq('id', child_id)
       .single()
 
-    const className = CLASSES[class_type as ClassType]?.name || class_type
+    const classes = await getClassesMap()
+    const className = classes[class_type]?.name || class_type
 
     if (parent?.email) {
       const resend = getResend()
